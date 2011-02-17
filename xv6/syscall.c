@@ -3,7 +3,7 @@
 #include "param.h"
 #include "mmu.h"
 #include "proc.h"
-#include "x86.h"
+#include "xv6.h"
 #include "syscall.h"
 
 // User code makes a system call with INT T_SYSCALL.
@@ -19,6 +19,7 @@ fetchint(struct proc *p, uint addr, int *ip)
   if(addr >= p->sz || addr+4 > p->sz)
     return -1;
   *ip = *(int*)(addr);
+  cprintf("ip is%x\n", *ip);
   return 0;
 }
 
@@ -44,7 +45,17 @@ fetchstr(struct proc *p, uint addr, char **pp)
 int
 argint(int n, int *ip)
 {
-  int x = fetchint(proc, proc->tf->esp + 4 + 4*n, ip);
+  int arg;
+  switch(n){
+	case 0:
+		__asm__ __volatile__("mov r4, %0"
+					:"=r" (arg)
+					:);
+	default:
+		;
+}
+  cprintf("arg%x\n", &arg);
+  int x = fetchint(proc, arg, ip);
   return x;
 }
 
@@ -99,41 +110,5 @@ extern int sys_wait(void);
 extern int sys_write(void);
 extern int sys_uptime(void);
 
-static int (*syscalls[])(void) = {
-[SYS_chdir]   sys_chdir,
-[SYS_close]   sys_close,
-[SYS_dup]     sys_dup,
-[SYS_exec]    sys_exec,
-[SYS_exit]    sys_exit,
-[SYS_fork]    sys_fork,
-[SYS_fstat]   sys_fstat,
-[SYS_getpid]  sys_getpid,
-[SYS_kill]    sys_kill,
-[SYS_link]    sys_link,
-[SYS_mkdir]   sys_mkdir,
-[SYS_mknod]   sys_mknod,
-[SYS_open]    sys_open,
-[SYS_pipe]    sys_pipe,
-[SYS_read]    sys_read,
-[SYS_sbrk]    sys_sbrk,
-[SYS_sleep]   sys_sleep,
-[SYS_unlink]  sys_unlink,
-[SYS_wait]    sys_wait,
-[SYS_write]   sys_write,
-[SYS_uptime]  sys_uptime,
-};
 
-void
-syscall(void)
-{
-  int num;
-  
-  num = proc->tf->eax;
-  if(num >= 0 && num < NELEM(syscalls) && syscalls[num])
-    proc->tf->eax = syscalls[num]();
-  else {
-    cprintf("%d %s: unknown sys call %d\n",
-            proc->pid, proc->name, num);
-    proc->tf->eax = -1;
-  }
-}
+

@@ -72,6 +72,7 @@ bget(uint dev, uint sector)
       if(!(b->flags & B_BUSY)){
         b->flags |= B_BUSY;
         release(&bcache.lock);
+        //cprintf("b->flags%x", b->flags);
         return b;
       }
       sleep(b, &bcache.lock);
@@ -86,6 +87,7 @@ bget(uint dev, uint sector)
       b->sector = sector;
       b->flags = B_BUSY;
       release(&bcache.lock);
+      cprintf("b->flags%x", b->flags);      
       return b;
     }
   }
@@ -97,7 +99,7 @@ struct buf*
 bread(uint dev, uint sector)
 {
   struct buf *b;
-
+  cprintf("dev%x\nsector%x\n", dev, sector);
   b = bget(dev, sector);
   if(!(b->flags & B_VALID))
     iderw(b);
@@ -131,7 +133,7 @@ brelse(struct buf *b)
   bcache.head.next = b;
 
   b->flags &= ~B_BUSY;
-  wakeup(b);
+  //wakeup(b);
 
   release(&bcache.lock);
 }

@@ -1,19 +1,19 @@
 // Segments in proc->gdt.
 // Also known to bootasm.S and trapasm.S
-#define SEG_KCODE 1  // kernel code
-#define SEG_KDATA 2  // kernel data+stack
-#define SEG_KCPU  3  // kernel per-cpu data
-#define SEG_UCODE 4  // user code
-#define SEG_UDATA 5  // user data+stack
-#define SEG_TSS   6  // this process's task state
-#define NSEGS     7
-
+//#define SEG_KCODE 1  // kernel code
+//#define SEG_KDATA 2  // kernel data+stack
+//#define SEG_KCPU  3  // kernel per-cpu data
+//#define SEG_UCODE 4  // user code
+//#define SEG_UDATA 5  // user data+stack
+//#define SEG_TSS   6  // this process's task state
+//#define NSEGS     7
+//void ksegment(void);
 // Per-CPU state
 struct cpu {
   uchar id;                    // Local APIC ID; index into cpus[] below
   struct context *scheduler;   // Switch here to enter scheduler
-  struct taskstate ts;         // Used by x86 to find stack for interrupt
-  struct segdesc gdt[NSEGS];   // x86 global descriptor table
+  //struct taskstate ts;         // Used by x86 to find stack for interrupt
+  //struct segdesc gdt[NSEGS];   // x86 global descriptor table
   volatile uint booted;        // Has the CPU started?
   int ncli;                    // Depth of pushcli nesting.
   int intena;                  // Were interrupts enabled before pushcli?
@@ -23,8 +23,22 @@ struct cpu {
   struct proc *proc;
 };
 
-extern struct cpu cpus[NCPU];
-extern int ncpu;
+struct context *new_context, *old_context;
+struct trapframe *ktf;
+struct trapframe *etf;
+uint *midtf;
+struct cpu cpus[1];
+struct cpu *bcpu;
+uint *glock;
+char *kstack, *cstack;
+char *skstack;
+extern pde_t *intpgdir;
+extern uint *midtf;
+extern char *cstack;
+//char firfs[10] = "/init\0";
+//extern char inits[];
+
+//extern int ncpu;
 
 // Per-CPU variables, holding pointers to the
 // current cpu and to the current process.
@@ -34,8 +48,8 @@ extern int ncpu;
 // holding those two variables in the local cpu's struct cpu.
 // This is similar to how thread-local variables are implemented
 // in thread libraries such as Linux pthreads.
-extern struct cpu *cpu asm("%gs:0");       // This cpu.
-extern struct proc *proc asm("%gs:4");     // Current proc on this cpu.
+struct cpu *cpu;       // This cpu.
+struct proc *proc;     // Current proc on this cpu.
 
 // Saved registers for kernel context switches.
 // Don't need to save all the segment registers (%cs, etc),
@@ -48,17 +62,120 @@ extern struct proc *proc asm("%gs:4");     // Current proc on this cpu.
 // at the "Switch stacks" comment. Switch doesn't save eip explicitly,
 // but it is on the stack and allocproc() manipulates it.
 struct context {
-  uint edi;
-  uint esi;
-  uint ebx;
-  uint ebp;
-  uint eip;
+
+    _reg_gp r0;
+    _reg_gp r1;
+    _reg_gp r2;
+    _reg_gp r3;
+    _reg_gp r4;
+    _reg_gp r5;
+    _reg_gp r6;
+    _reg_gp r7;
+    /* not-banked registers */
+    _reg_gp r8;
+    _reg_gp r9;
+    _reg_gp r10;
+    _reg_gp r11;
+    _reg_gp r12;
+    _reg_gp r13;
+    _reg_gp r14;
+    /* control registers */
+    _reg_gp ssr;
+    _reg_gp spc;
+    _reg_gp sgr;
+    _reg_gp mach;
+    _reg_gp macl;
+    _reg_vt dbr;
+    
+    /* general purpose registers (bank1) */
+    _reg_gp r0_bank;
+    _reg_gp r1_bank;
+    _reg_gp r2_bank;
+    _reg_gp r3_bank;
+    _reg_gp r4_bank;
+    _reg_gp r5_bank;
+    _reg_gp r6_bank;
+    _reg_gp r7_bank;
+    /* system registers */
+    _reg_gp gbr;
+    _reg_gp pr;
+    _reg_gp r15;
+    //_reg_gp sr;
+    /* dummy registers and vbr */
+    //_reg_gp pc;
+    //_reg_vt vbr600;
+   // _reg_vt vbr400;
+   // _reg_vt vbr100;
+    //_reg_vt vbr;
+    //_reg_gp intevt;  
+//uint edi;
+  //uint esi;
+  //uint ebx;
+  //uint ebp;
+  //uint eip;
 };
+
+struct trapframe {
+
+    _reg_gp r0;
+    _reg_gp r1;
+    _reg_gp r2;
+    _reg_gp r3;
+    _reg_gp r4;
+    _reg_gp r5;
+    _reg_gp r6;
+    _reg_gp r7;
+    /* not-banked registers */
+    _reg_gp r8;
+    _reg_gp r9;
+    _reg_gp r10;
+    _reg_gp r11;
+    _reg_gp r12;
+    _reg_gp r13;
+    _reg_gp r14;
+    /* control registers */
+    _reg_gp spc;
+    _reg_gp pr;
+    _reg_gp ssr;
+    _reg_gp gbr;
+    _reg_gp mach;
+    _reg_gp macl;
+   /* general purpose registers (bank1) */
+    _reg_gp r4_rank;
+    _reg_gp r7_rank;
+
+};
+//struct trapframe {
+//    _reg_gp r7_rank;
+//    _reg_gp r4_rank;
+//    _reg_gp macl;
+//    _reg_gp mach;
+//    _reg_gp gbr;
+//    _reg_gp ssr;
+//    _reg_gp pr;
+//    _reg_gp spc;
+//    _reg_gp r14;
+//    _reg_gp r13;
+//    _reg_gp r12;
+//    _reg_gp r11;
+//    _reg_gp r10;
+//    _reg_gp r9;
+//    _reg_gp r8;
+//    _reg_gp r7;
+//    _reg_gp r6;
+//    _reg_gp r5;
+//    _reg_gp r4;
+//    _reg_gp r3;
+//    _reg_gp r2;
+//    _reg_gp r1;
+//    _reg_gp r0;
+//
+//};
 
 enum procstate { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
 
 // Per-process state
-struct proc {
+struct proc{
   uint sz;                     // Size of process memory (bytes)
   pde_t* pgdir;                // Linear address of proc's pgdir
   char *kstack;                // Bottom of kernel stack for this process

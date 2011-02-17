@@ -1,4 +1,4 @@
-// System call numbers
+
 #define SYS_fork    1
 #define SYS_exit    2
 #define SYS_wait    3
@@ -20,3 +20,6 @@
 #define SYS_sbrk   19
 #define SYS_sleep  20
 #define SYS_uptime 21
+#define SYS_test   22
+
+#define NR_syscalls 23

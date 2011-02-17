@@ -4,7 +4,7 @@
 #include "fs.h"
 #include "fcntl.h"
 #include "syscall.h"
-#include "traps.h"
+//#include "traps.h"
 
 char buf[2048];
 char name[3];
@@ -1376,48 +1376,7 @@ sbrktest(void)
   printf(stdout, "sbrk test OK\n");
 }
 
-void
-validateint(int *p)
-{
-  int res;
-  asm("mov %%esp, %%ebx\n\t"
-      "mov %3, %%esp\n\t"
-      "int %2\n\t"
-      "mov %%ebx, %%esp" :
-      "=a" (res) :
-      "a" (SYS_sleep), "n" (T_SYSCALL), "c" (p) :
-      "ebx");
-}
 
-void
-validatetest(void)
-{
-  int hi = 1100*1024;
-
-  printf(stdout, "validate test\n");
-
-  uint p;
-  for (p = 0; p <= (uint)hi; p += 4096) {
-    int pid;
-    if ((pid = fork()) == 0) {
-      // try to crash the kernel by passing in a badly placed integer
-      validateint((int*)p);
-      exit();
-    }
-    sleep(0);
-    sleep(0);
-    kill(pid);
-    wait();
-
-    // try to crash the kernel by passing in a bad string pointer
-    if (link("nosuchfile", (char*)p) != -1) {
-      printf(stdout, "link should not succeed\n");
-      exit();
-    }
-  }
-
-  printf(stdout, "validate ok\n");
-}
 
 int
 main(int argc, char *argv[])
@@ -1431,7 +1390,7 @@ main(int argc, char *argv[])
   close(open("usertests.ran", O_CREATE));
 
   sbrktest();
-  validatetest();
+  //validatetest();
 
   opentest();
   writetest();

@@ -1,92 +1,56 @@
-// This file contains definitions for the 
-// x86 memory management unit (MMU).
+//void xv_mmu_init();
+//static void print_ttb();
+/* registers */
+#define PTEH 0xff000000  // page-table entry high
+#define PTEL 0xff000004  // page-table entry low
+#define TTB  0xff000008  // transfer-table base
+#define TEA  0xff00000c  // TLB exception address
+#define MMUCR 0xff000010 // MMU control register
+//#define PASCR 0xff000070 // phisical-address-space control register
+//#define IRMCR 0xff000078 // instruction re-fetch control register
+#define PTEA  0xff000034 //Page table entry assistance register 
 
-// Eflags register
-#define FL_CF           0x00000001      // Carry Flag
-#define FL_PF           0x00000004      // Parity Flag
-#define FL_AF           0x00000010      // Auxiliary carry Flag
-#define FL_ZF           0x00000040      // Zero Flag
-#define FL_SF           0x00000080      // Sign Flag
-#define FL_TF           0x00000100      // Trap Flag
-#define FL_IF           0x00000200      // Interrupt Enable
-#define FL_DF           0x00000400      // Direction Flag
-#define FL_OF           0x00000800      // Overflow Flag
-#define FL_IOPL_MASK    0x00003000      // I/O Privilege Level bitmask
-#define FL_IOPL_0       0x00000000      //   IOPL == 0
-#define FL_IOPL_1       0x00001000      //   IOPL == 1
-#define FL_IOPL_2       0x00002000      //   IOPL == 2
-#define FL_IOPL_3       0x00003000      //   IOPL == 3
-#define FL_NT           0x00004000      // Nested Task
-#define FL_RF           0x00010000      // Resume Flag
-#define FL_VM           0x00020000      // Virtual 8086 mode
-#define FL_AC           0x00040000      // Alignment Check
-#define FL_VIF          0x00080000      // Virtual Interrupt Flag
-#define FL_VIP          0x00100000      // Virtual Interrupt Pending
-#define FL_ID           0x00200000      // ID flag
+
+//#define FL_CF           0x00000001      // Carry Flag
+//#define FL_PF           0x00000004      // Parity Flag
+//#define FL_AF           0x00000010      // Auxiliary carry Flag
+//#define FL_ZF           0x00000040      // Zero Flag
+//#define FL_SF           0x00000080      // Sign Flag
+//#define FL_TF           0x00000100      // Trap Flag
+//#define FL_IF           0x00000200      // Interrupt Enable
+//#define FL_DF           0x00000400      // Direction Flag
+//#define FL_OF           0x00000800      // Overflow Flag
+//#define FL_IOPL_MASK    0x00003000      // I/O Privilege Level bitmask
+//#define FL_IOPL_0       0x00000000      //   IOPL == 0
+//#define FL_IOPL_1       0x00001000      //   IOPL == 1
+//#define FL_IOPL_2       0x00002000      //   IOPL == 2
+//#define FL_IOPL_3       0x00003000      //   IOPL == 3
+//#define FL_NT           0x00004000      // Nested Task
+//#define FL_RF           0x00010000      // Resume Flag
+//#define FL_VM           0x00020000      // Virtual 8086 mode
+//#define FL_AC           0x00040000      // Alignment Check
+//#define FL_VIF          0x00080000      // Virtual Interrupt Flag
+//#define FL_VIP          0x00100000      // Virtual Interrupt Pending
+//#define FL_ID           0x00200000      // ID flag
 
 // Control Register flags
-#define CR0_PE		0x00000001	// Protection Enable
-#define CR0_MP		0x00000002	// Monitor coProcessor
-#define CR0_EM		0x00000004	// Emulation
-#define CR0_TS		0x00000008	// Task Switched
-#define CR0_ET		0x00000010	// Extension Type
-#define CR0_NE		0x00000020	// Numeric Errror
-#define CR0_WP		0x00010000	// Write Protect
-#define CR0_AM		0x00040000	// Alignment Mask
-#define CR0_NW		0x20000000	// Not Writethrough
-#define CR0_CD		0x40000000	// Cache Disable
-#define CR0_PG		0x80000000	// Paging
+//#define CR0_PE		0x00000001	// Protection Enable
+//#define CR0_MP		0x00000002	// Monitor coProcessor
+//#define CR0_EM		0x00000004	// Emulation
+//#define CR0_TS		0x00000008	// Task Switched
+//#define CR0_ET		0x00000010	// Extension Type
+//#define CR0_NE		0x00000020	// Numeric Errror
+//#define CR0_WP		0x00010000	// Write Protect
+//#define CR0_AM		0x00040000	// Alignment Mask
+//#define CR0_NW		0x20000000	// Not Writethrough
+//#define CR0_CD		0x40000000	// Cache Disable
+//#define CR0_PG		0x80000000	// Paging
 
-// Segment Descriptor
-struct segdesc {
-  uint lim_15_0 : 16;  // Low bits of segment limit
-  uint base_15_0 : 16; // Low bits of segment base address
-  uint base_23_16 : 8; // Middle bits of segment base address
-  uint type : 4;       // Segment type (see STS_ constants)
-  uint s : 1;          // 0 = system, 1 = application
-  uint dpl : 2;        // Descriptor Privilege Level
-  uint p : 1;          // Present
-  uint lim_19_16 : 4;  // High bits of segment limit
-  uint avl : 1;        // Unused (available for software use)
-  uint rsv1 : 1;       // Reserved
-  uint db : 1;         // 0 = 16-bit segment, 1 = 32-bit segment
-  uint g : 1;          // Granularity: limit scaled by 4K when set
-  uint base_31_24 : 8; // High bits of segment base address
-};
 
-// Normal segment
-#define SEG(type, base, lim, dpl) (struct segdesc)    \
-{ ((lim) >> 12) & 0xffff, (uint)(base) & 0xffff,      \
-  ((uint)(base) >> 16) & 0xff, type, 1, dpl, 1,       \
-  (uint)(lim) >> 28, 0, 0, 1, 1, (uint)(base) >> 24 }
-#define SEG16(type, base, lim, dpl) (struct segdesc)  \
-{ (lim) & 0xffff, (uint)(base) & 0xffff,              \
-  ((uint)(base) >> 16) & 0xff, type, 1, dpl, 1,       \
-  (uint)(lim) >> 16, 0, 0, 1, 0, (uint)(base) >> 24 }
 
-#define DPL_USER    0x3     // User DPL
+//#define DPL_USER    0x3     // User DPL
 
-// Application segment type bits
-#define STA_X       0x8     // Executable segment
-#define STA_E       0x4     // Expand down (non-executable segments)
-#define STA_C       0x4     // Conforming code segment (executable only)
-#define STA_W       0x2     // Writeable (non-executable segments)
-#define STA_R       0x2     // Readable (executable segments)
-#define STA_A       0x1     // Accessed
 
-// System segment type bits
-#define STS_T16A    0x1     // Available 16-bit TSS
-#define STS_LDT     0x2     // Local Descriptor Table
-#define STS_T16B    0x3     // Busy 16-bit TSS
-#define STS_CG16    0x4     // 16-bit Call Gate
-#define STS_TG      0x5     // Task Gate / Coum Transmitions
-#define STS_IG16    0x6     // 16-bit Interrupt Gate
-#define STS_TG16    0x7     // 16-bit Trap Gate
-#define STS_T32A    0x9     // Available 32-bit TSS
-#define STS_T32B    0xB     // Busy 32-bit TSS
-#define STS_CG32    0xC     // 32-bit Call Gate
-#define STS_IG32    0xE     // 32-bit Interrupt Gate
-#define STS_TG32    0xF     // 32-bit Trap Gate
 
 // A linear address 'la' has a three-part structure as follows:
 //
@@ -100,7 +64,7 @@ struct segdesc {
 #define PDX(la)		((((uint) (la)) >> PDXSHIFT) & 0x3FF)
 
 // page table index
-#define PTX(la)		((((uint) (la)) >> PTXSHIFT) & 0x3FF)
+#define PTX(la)		((((uint) (la)) >> PTXSHIFT) & 0xFFF)
 
 // construct linear address from indexes and offset
 #define PGADDR(d, t, o)	((uint) ((d) << PDXSHIFT | (t) << PTXSHIFT | (o)))
@@ -111,106 +75,329 @@ struct segdesc {
 #define PADDR(a)       ((uint) a)
 
 // Page directory and page table constants.
-#define NPDENTRIES	1024		// page directory entries per page directory
+#define NPDENTRIES	4096		// page directory entries per page directory
 #define NPTENTRIES	1024		// page table entries per page table
 
-#define PGSIZE		4096		// bytes mapped by a page
+#define PGSIZE		0x100000		// bytes mapped by a page
 #define PGSHIFT		12		// log2(PGSIZE)
 
-#define PTXSHIFT	12		// offset of PTX in a linear address
+#define PTXSHIFT	20		// offset of PTX in a linear address
 #define PDXSHIFT	22		// offset of PDX in a linear address
 
 #define PGROUNDUP(sz)  (((sz)+PGSIZE-1) & ~(PGSIZE-1))
 #define PGROUNDDOWN(a) ((char*)((((unsigned int)(a)) & ~(PGSIZE-1))))
 
 // Page table/directory entry flags.
-#define PTE_P		0x001	// Present
-#define PTE_W		0x002	// Writeable
-#define PTE_U		0x004	// User
-#define PTE_PWT		0x008	// Write-Through
-#define PTE_PCD		0x010	// Cache-Disable
-#define PTE_A		0x020	// Accessed
-#define PTE_D		0x040	// Dirty
-#define PTE_PS		0x080	// Page Size
-#define PTE_MBZ		0x180	// Bits must be zero
+//#define	_PAGE_WT	0x001		/* WT-bit on SH-4, 0 on SH-3 */
+//#define _PAGE_HW_SHARED	0x002		/* SH-bit  : shared among processes */
+//#define _PAGE_DIRTY	0x004		/* D-bit   : page changed */
+//#define _PAGE_CACHABLE	0x008		/* C-bit   : cachable */
+//#define _PAGE_SZ0	0x010		/* SZ0-bit : Size of page */
+//#define _PAGE_RW	0x020		/* PR0-bit : write access allowed */
+//#define _PAGE_USER	0x040		/* PR1-bit : user space access allowed */
+//#define _PAGE_SZ1	0x080		/* SZ1-bit : Size of page (on SH-4) */
+//#define _PAGE_PRESENT	0x100		/* V-bit   : page is valid */
+//#define _PAGE_PROTNONE	0x200		/* software: if not present  */
+//#define _PAGE_ACCESSED	0x400		/* software: page referenced */
+//#define _PAGE_FILE	_PAGE_WT	/* software: pagecache or swap? */
+
+#define PTE_P		0x100	// Present
+#define PTE_W		0x020	// Writeable
+#define PTE_U		0x040	// User
+#define PTE_PWT		0x001	// Write-Through
+#define PTE_PCD		0xfffffff7	// Cache-Disable
+//#define PTE_A		0x020	// Accessed
+#define PTE_D		0x004	// Dirty
+#define PTE_PS		0x090	// Page Size
+//#define PTE_MBZ		0x180	// Bits must be zero
 
 // Address in page table or page directory entry
 #define PTE_ADDR(pte)	((uint) (pte) & ~0xFFF)
 
-typedef uint pte_t;
+//typedef uint pte_t;
 
-// Task state segment format
-struct taskstate {
-  uint link;         // Old ts selector
-  uint esp0;         // Stack pointers and segment selectors
-  ushort ss0;        //   after an increase in privilege level
-  ushort padding1;
-  uint *esp1;
-  ushort ss1;
-  ushort padding2;
-  uint *esp2;
-  ushort ss2;
-  ushort padding3;
-  void *cr3;         // Page directory base
-  uint *eip;         // Saved state from last task switch
-  uint eflags;
-  uint eax;          // More saved state (registers)
-  uint ecx;
-  uint edx;
-  uint ebx;
-  uint *esp;
-  uint *ebp;
-  uint esi;
-  uint edi;
-  ushort es;         // Even more saved state (segment selectors)
-  ushort padding4;
-  ushort cs;
-  ushort padding5;
-  ushort ss;
-  ushort padding6;
-  ushort ds;
-  ushort padding7;
-  ushort fs;
-  ushort padding8;
-  ushort gs;
-  ushort padding9;
-  ushort ldt;
-  ushort padding10;
-  ushort t;          // Trap on task switch
-  ushort iomb;       // I/O map base address
-};
+//#define EXPEVT 0xff000024
+//#define INTEVT 0xff000028
 
-// Gate descriptors for interrupts and traps
-struct gatedesc {
-  uint off_15_0 : 16;   // low 16 bits of offset in segment
-  uint cs : 16;         // code segment selector
-  uint args : 5;        // # args, 0 for interrupt/trap gates
-  uint rsv1 : 3;        // reserved(should be zero I guess)
-  uint type : 4;        // type(STS_{TG,IG32,TG32})
-  uint s : 1;           // must be 0 (system)
-  uint dpl : 2;         // descriptor(meaning new) privilege level
-  uint p : 1;           // Present
-  uint off_31_16 : 16;  // high bits of offset in segment
-};
+//#define SR_BL_ENABLE    0x10000000
+//#define SR_BL_DISABLE   0xefffffff
+//#define SR_MDRBBL_MASK  0x70000000
+//#define SR_IMASK_MASK   0x000000f0
+//#define SR_IMASK_CLEAR  0xffffff0f
+//#define SR_RB_MASK		0x20000000
 
-// Set up a normal interrupt/trap gate descriptor.
-// - istrap: 1 for a trap (= exception) gate, 0 for an interrupt gate.
-//   interrupt gate clears FL_IF, trap gate leaves FL_IF alone
-// - sel: Code segment selector for interrupt/trap handler
-// - off: Offset in code segment for interrupt/trap handler
-// - dpl: Descriptor Privilege Level -
-//        the privilege level required for software to invoke
-//        this interrupt/trap gate explicitly using an int instruction.
-#define SETGATE(gate, istrap, sel, off, d)                \
-{                                                         \
-  (gate).off_15_0 = (uint) (off) & 0xffff;                \
-  (gate).cs = (sel);                                      \
-  (gate).args = 0;                                        \
-  (gate).rsv1 = 0;                                        \
-  (gate).type = (istrap) ? STS_TG32 : STS_IG32;           \
-  (gate).s = 0;                                           \
-  (gate).dpl = (d);                                       \
-  (gate).p = 1;                                           \
-  (gate).off_31_16 = (uint) (off) >> 16;                  \
+//#define VBR_INIT		0xdeadbeef
+//#define kernel_prel  0x40000000
+//#define proc_prel    0xbfffffff
+//#define FL_IF        0x10000000      // Interrupt Enable
+
+
+static void enable_mmu()
+{
+    uint * mmucr = (uint *)MMUCR;
+    *mmucr |= 0x00000001;
+    return;
 }
+
+static void disable_mmu()
+{
+    uint * mmucr = (uint *)MMUCR;
+    *mmucr &= 0xfffffffe;
+    return;
+}
+
+static void clear_tlb()
+{
+    uint * mmucr = (uint *)MMUCR;
+    *mmucr |= 0x00000004;
+    return;
+}
+
+static void set_urb(uint val)
+{
+    uint * mmucr = (uint *)MMUCR;
+    if(val >= 64)
+    {
+        cprintf("error : URB should less than 64\n");
+       val = 63;
+    }
+    val <<= 18;
+    val &= 0x00fc0000;
+    *mmucr &= 0xff03ffff;
+    *mmucr |= val;
+    return;
+
+}
+
+static void set_urc(uint val)
+{
+    uint * mmucr = (uint *)MMUCR;
+    if(val >= 64)
+    {
+        cprintf("error : URC should less than 64\n");
+        val = 63;
+    }
+    val <<= 10;
+    val &= 0x0000fc00;
+    *mmucr &= 0xffff03ff;
+    *mmucr |= val;
+    return;
+
+}
+
+
+static void print_pteh()
+{
+    uint * pteh = (uint *)PTEH;
+    cprintf("PTEH = %x\n", *pteh);
+    return;
+}
+
+static void set_pteh(uint val)
+{
+    uint * pteh = (uint *)PTEH;
+    *pteh = (val & 0xffffffff);
+    return;
+}
+
+static void print_ptea()
+{
+    uint * ptea = (uint *)PTEA;
+    cprintf("PTEA = %x\n", *ptea);
+    return;
+}
+
+static void set_ptea(uint val)
+{
+    uint * ptea = (uint *)PTEA;
+    *ptea = (val & 0xffffffff);
+    return;
+}
+
+static void set_ptel(uint val)
+{
+    uint * ptel = (uint *)PTEL;
+    *ptel = (val & 0xffffffff);
+    return;
+}
+
+static void print_ptel()
+{
+    uint * ptel = (uint *)PTEL;
+    cprintf("PTEL = %x\n", *ptel);
+    return;
+}
+
+static void ldtlb()
+{
+    __asm__ __volatile__("ldtlb\n\t");
+    return;
+}
+
+static void set_ttb(uint val)
+{
+    uint * ttb = (uint *)TTB;
+    * ttb = val;
+    return;
+}
+
+static void print_ttb()
+{
+    uint * ttb = (uint *)TTB;
+    cprintf("TTB = %x\n", *ttb);
+    return;
+}
+
+//static void set_mmucr(uint val)
+//{
+//    uint * mmucr = (uint *)MMUCR;
+//    *mmucr = val;
+//    return;
+//}
+
+//static void set_pascr(uint val)
+//{
+//    uint * pascr = (uint *)PASCR;
+//    *pascr = val;
+//    return;
+//}
+
+//static void set_irmcr(uint val)
+//{
+//    uint * irmcr = (uint *)IRMCR;
+//   *irmcr = val;
+//   return;
+//}
+
+//static void ocbp(uint val)
+//{
+//    __asm__ __volatile__("mov %0,%1\n\t"
+//                         "ocbp @%1\n\t"
+//                     :"+z" (val)
+//                             :"r"  (0)
+//                            );
+//    return;
+//}
+
+//static void icbi(uint val)
+//{
+//    __asm__ __volatile__("mov %0,%1\n\t"
+//                         "icbi @%1\n\t"
+//                     :"+z" (val)
+//                             :"r"  (0)
+//                            );
+//    return;
+//}
+
+//void xv_mmu_init()
+//{
+//    clear_tlb();
+//    disable_mmu();
+//    set_urc(0);
+//    set_urb(0x3f);
+//    set_ttb(0x8c000000);
+//    print_ttb();
+//    enable_mmu();
+//    return;
+//}
+
+//static inline void sti(void)
+//{
+//    unsigned long __srval;
+//    __asm__ __volatile__("stc   sr,%0\n\t"
+//            "or    %1,%0\n\t"
+//           "ldc   %0,sr\n\t"
+//           :"+&z" (__srval)
+//          :"r"   (SR_BL_ENABLE)
+//          );
+
+//}
+
+//static inline void cli(void)
+//{
+//   unsigned long __srval;
+//   __asm__ __volatile__("stc  sr,%0\n\t"
+//            "and   %1,%0\n\t"
+//            "ldc   %0,sr\n\t"
+//            :"+&z" (__srval)
+//            :"r"   (SR_BL_DISABLE)
+//            );
+//}
+
+//static inline void set_proc_prel(void)
+//{
+//   unsigned long __srval;
+//   __asm__ __volatile__("stc  sr,%0\n\t"
+//            "and   %1,%0\n\t"
+//            "ldc   %0,sr\n\t"
+//            :"+&z" (__srval)
+//            :"r"   (proc_prel)
+//            );
+//}
+
+//static inline void set_kerenl_prel(void)
+//{
+//   unsigned long __srval;
+//   __asm__ __volatile__("stc  sr,%0\n\t"
+//            "or   %1,%0\n\t"
+//            "ldc   %0,sr\n\t"
+//            :"+&z" (__srval)
+//            :"r"   (kernel_prel)
+//            );
+//}
+
+static inline void set_val_in_p2(unsigned int addr, unsigned int val)
+{
+	unsigned int __tempval;
+	__asm__ __volatile__(
+		"mov.l 1f, %0\n\t"
+		"or %1, %0\n\t"
+		"jmp	@%0\n\t"
+		"nop\n\t"
+		".align 4\n"
+		"1: .long 2f\n"
+		"2:\n\t"
+
+		"mov.l 3f, %0\n\t"
+		//"synco\n\t"
+		//"ocbi @%0\n\t"
+		"nop\n"
+		"nop\n"
+		"nop\n"
+		"nop\n"
+		"nop\n"
+		"nop\n"
+		"nop\n"
+		"nop\n"
+		//"mov.l 6f, r3\n\t"
+		//"mov.l 5f, r1\n\t"
+		//"mov.l r1, @r0\n\t"
+		//"mov.l @r3, r3\n\t"
+		"mov.l %2, @%3\n\t "
+		//"and r2, r3\n\t"
+		//"mov.l r1, @r0\n\t"		
+		//"synco\n\t"
+		//"ocbi @r0\n\t"
+		"nop\n"
+		"nop\n"
+		"nop\n"
+		"nop\n"
+		"nop\n"
+		"nop\n"
+		"nop\n"
+		"nop\n"
+		"jmp @%0\n\t"
+		"nop\n"
+		".align 4\n"
+		"3: .long 4f\n"
+		//"5: .long 0xfffffe00\n"
+		//"6: .long 0xf2000000\n"
+		"4:"
+
+			: "=&r" (__tempval)
+			: "r"	(0x20000000), "r" (val), "r" (addr)
+		);
+return;
+}
+
 

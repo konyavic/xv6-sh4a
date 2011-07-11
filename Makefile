@@ -208,9 +208,9 @@ fs.img: mkfs README $(UPROGS) initcode
 -include *.d
 
 clean:
-	rm $(objects)
-	rm $(deps)
-	rm $(kernel)
+	rm -rf $(objects)
+	rm -rf $(deps)
+	rm -rf $(kernel)
 
 
 # make a printout

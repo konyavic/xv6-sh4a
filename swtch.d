@@ -1,1 +1,0 @@
-swtch.o: swtch.S

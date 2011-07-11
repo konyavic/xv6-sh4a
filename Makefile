@@ -211,6 +211,7 @@ clean:
 	rm -rf $(objects)
 	rm -rf $(deps)
 	rm -rf $(kernel)
+	rm -rf $(UPROGS)
 
 
 # make a printout

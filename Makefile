@@ -1,4 +1,7 @@
+
+# kernel should be placed at first or the order of sections will be wrong
 OBJS = \
+	kernel.o\
 	main.o\
 	assert.o\
 	bio.o\
@@ -11,6 +14,7 @@ OBJS = \
 	proc.o\
 	spinlock.o\
 	string.o\
+	swtch.o\
 	syscall.o\
 	sysfile.o\
 	sysproc.o\
@@ -21,7 +25,7 @@ OBJS = \
 	trap.o\
 	print.o\
 	console.o\
-
+	call.o\
 
 # Cross-compiling (e.g., on Mac OS X)
 # TOOLPREFIX = i386-jos-elf-
@@ -41,12 +45,9 @@ ASFLAGS =
 LDFLAGS += 
 LIB = /opt/shtools/lib/gcc/sh4-linux/3.4.6/libgcc.a
 
-image: kernel.S swtch.S initcode call.S $(OBJS) $(LIB) fs.img
-	$(CC) $(CFLAGS) -c kernel.S
-	$(CC) $(CFLAGS) -c swtch.S
-	$(CC) $(CFLAGS) -c call.S
+image: initcode $(OBJS) $(LIB) fs.img
 	$(OBJCOPY) -I binary fs.img fs_img.o
-	$(LD) $(LDFLAGS) -T xv6.lds -o linkout kernel.o swtch.o call.o $(OBJS) $(LIB) -b binary initcode fs.img 
+	$(LD) $(LDFLAGS) -T xv6.lds -o linkout $(OBJS) $(LIB) -b binary initcode fs.img 
 	$(OBJCOPY) -S -O binary linkout image
 
 initcode: initcode.S

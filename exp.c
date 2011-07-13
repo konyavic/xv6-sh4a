@@ -17,7 +17,6 @@ uint i = 0;
 //   uint  expno;
 //   uint *expevt = (uint *)EXPEVT;
 //   expno = *expevt; 
-//   cprintf("EXPEVP%x\n", expno);
 //   (vect_table[expno >> 5])();
   // __tlb_term();
 //}
@@ -40,7 +39,6 @@ uint tlbtable[64][3];
 //print_ptea();
 //ldtlb();
 uint * tea = (uint *) TEA;
-cprintf("addrmiss%x\n", *tea);
 tlbtable[0][0]= *tea & 0xfffffc00;
 tlbtable[0][1]= intpgdir[PTX(*tea)];
 tlbtable[0][2]= 0x0;
@@ -87,7 +85,6 @@ uint tlbtable[64][3];
 //print_ptea();
 //ldtlb();
 uint * tea = (uint *) TEA;
-cprintf("addrmiss%x\n", *tea);
 tlbtable[0][0]= *tea & 0xfffffc00;
 
 tlbtable[0][1]= intpgdir[PTX(*tea)];
@@ -127,7 +124,6 @@ tlbprotecterrorW(){uint tlbtable[64][3];
 //print_ptea();
 //ldtlb();
 uint * tea = (uint *) TEA;
-cprintf("addrmiss%x\n", *tea);
 tlbtable[0][0]= *tea & 0xfffffc00;
 tlbtable[0][1]= intpgdir[PTX(*tea)];
 tlbtable[0][2]= 0x0;
@@ -207,7 +203,6 @@ tmu_mask();
 if(cpu->id == 0){
       acquire(&tickslock);
       ticks++;
-      cprintf("ticks", ticks);
       wakeup(&ticks);
       release(&tickslock);
     }

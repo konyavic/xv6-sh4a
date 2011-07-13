@@ -52,7 +52,6 @@ static struct {
 
 // Print to the console. only understands %d, %x, %p, %s.
 //void
-//cprintf(char *fmt, ...)
 //{
 //  int i, c, state, locking;
 //  uint *argp;
@@ -109,12 +108,8 @@ static struct {
   
 //  cli();
 //  cons.locking = 0;
-//  cprintf("cpu%d: panic: ", cpu->id);
-//  cprintf(s);
-//  cprintf("\n");
 //  getcallerpcs(&s, pcs);
 //  for(i=0; i<10; i++)
-//    cprintf(" %p", pcs[i]);
 //  panicked = 1; // freeze other CPU
 //  for(;;)
 //    ;

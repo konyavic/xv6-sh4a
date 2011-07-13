@@ -75,13 +75,9 @@ idestart(struct buf *b)
   const char *fstart = _binary_fs_img_start;
   const char *fend = _binary_fs_img_end;
   int size = (int) _binary_fs_img_size;
-  cprintf("fstart%x\n", fstart);
-  cprintf("fend%x\n", fend);
-  cprintf("size%x\n", size);
   if(b == 0)
     panic("idestart");
   int fdata = b->sector * 512 + fstart;
-  cprintf("fdata%x\n", fdata);
   //idewait(0);
   //outb(0x3f6, 0);  // generate interrupt
   //outb(0x1f2, 1);  // number of sectors
@@ -110,7 +106,6 @@ idestart(struct buf *b)
 //  acquire(&idelock);
 //  if((b = idequeue) == 0){
 //    release(&idelock);
-//    cprintf("Spurious IDE interrupt.\n");
 //    return;
 //  }
 //  idequeue = b->qnext;
@@ -159,7 +154,6 @@ iderw(struct buf *b)
     idestart(b);
   b->flags |= B_VALID;
   b->flags &= ~B_DIRTY;
-  cprintf("b->flag%x\n", b->flags);
   // Wait for request to finish.
   // Assuming will not sleep too long: ignore proc->killed.
   while((b->flags & (B_VALID|B_DIRTY)) != B_VALID) {

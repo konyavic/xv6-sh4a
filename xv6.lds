@@ -5,7 +5,6 @@ ENTRY(start)
 
 SECTIONS
 {
-
     . = 0x8c800000;
     .start    : { *(.start) }
     .text     : { *(.text) }
@@ -16,8 +15,6 @@ SECTIONS
         __bss_start = .;
         *(.bss)
         . = ALIGN(32);
-    
     }
-
 }
 

@@ -256,7 +256,6 @@ ilock(struct inode *ip)
     ip->minor = dip->minor;
     ip->nlink = dip->nlink;
     ip->size = dip->size;
-    cprintf("type%x\nmajor%x\nminor%x\nsize%x\n", ip->type, ip->major, ip->minor, ip->size);
     memmove(ip->addrs, dip->addrs, sizeof(ip->addrs));
     brelse(bp);
     ip->flags |= I_VALID;
@@ -473,16 +472,13 @@ dirlookup(struct inode *dp, char *name, uint *poff)
     panic("dirlookup not DIR");
   
   for(off = 0; off < dp->size; off += BSIZE){
-    cprintf("dp->size%x\nname%c%c%c%c\n", dp->size, *name, *(name+1), *(name+2), *(name+3));
     bp = bread(dp->dev, bmap(dp, off / BSIZE));
-    cprintf("bp-data%x\n", bp->data);    
     for(de = (struct dirent*)bp->data;
         de < (struct dirent*)(bp->data + BSIZE);
         de++){
       
       if(de->inum == 0)
         continue;
-	  cprintf("de->num%x\nde->name%x\n", de->inum, *de->name);
       if(namecmp(name, de->name) == 0){
         // entry matches path element
         if(poff)
@@ -592,7 +588,6 @@ namex(char *path, int nameiparent, char *name)
     }
     if((next = dirlookup(ip, name, 0)) == 0){
       iunlockput(ip);
-    //cprintf("type%x\nmajor%x\nminor%x\nsize%x\n", ip->type, ip->major, ip->minor, ip->size);
       return 0;
     }
     iunlockput(ip);
@@ -602,7 +597,6 @@ namex(char *path, int nameiparent, char *name)
     iput(ip);
     return 0;
   }
-    cprintf("type%x\nmajor%x\nminor%x\nsize%x\n", ip->type, ip->major, ip->minor, ip->size);
   return ip;
 }
 

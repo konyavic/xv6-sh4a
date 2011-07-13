@@ -10,7 +10,6 @@ int
 sys_test(void)
 {
   //switchkvm();
-  cprintf("syscall_test");
   //while(1){;}
   //switchuvm(proc);
   return;
@@ -21,7 +20,6 @@ sys_fork(void)
 {
   int pid;
  // switchkvm();
-  cprintf("ktf->spc%x,ktf->pr%x\n", ktf->spc,ktf->pr);
   pid = fork();
   //switchuvm(proc);
   return pid;
@@ -64,7 +62,6 @@ sys_kill(int pid)
 int
 sys_getpid(void)
 {
-  cprintf("pid%x\n", proc->pid);
   return proc->pid;
 }
 
@@ -77,14 +74,11 @@ sys_sbrk(uint n)
   if(n < 0)
     {  return -1;
     }
-      cprintf("n%x\n", n);
     addr = proc->sz;
-  //cprintf("proc->sz%x\n", proc->sz);
   if(growproc(n) < 0)
     {  return -1;
     }
     //addr = proc->sz;
-  cprintf("addr%x\n", addr);
   //switchuvm(proc);  
   return addr;
 }
@@ -108,11 +102,9 @@ sys_sleep(uint n)
     return -1;
     }
     }
-      cprintf("cha%x\n", ticks - ticks0);
     sleep(&ticks, &tickslock);
   }
 
-  cprintf("sleep");
   release(&tickslock);
     //switchuvm(proc);
   return 0;

@@ -105,7 +105,6 @@ kfree(char *v)
   r = (struct run *) v;
   r->next = kmem.freelist;
   kmem.freelist = r;
-  cprintf("freesucced\n");
   release(&kmem.lock);
 }
 

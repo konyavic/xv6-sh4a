@@ -2,66 +2,64 @@
 int xv6_scif_init=0;
 void scif_init(void)
 {
-	xv6_scif_init = 1;
+  xv6_scif_init = 1;
 
-    SCSCR = 0; /* disable everything */
+  SCSCR = 0; /* disable everything */
 
-	SCFCR = FCR_RFRST | FCR_TFRST |    /* clear FIFO */
-			FCR_TTRG_1 | FCR_RTRG_1; /* set FIFO trigger */
+  SCFCR = FCR_RFRST | FCR_TFRST |    /* clear FIFO */
+    FCR_TTRG_1 | FCR_RTRG_1; /* set FIFO trigger */
 
-    SCSMR = 0; /* 8 bits data, No parity, 1 stop bit */
+  SCSMR = 0; /* 8 bits data, No parity, 1 stop bit */
 
-    SCBRR = SCIF_BPS_115200; /* set baudrate to 115200bps */
+  SCBRR = SCIF_BPS_115200; /* set baudrate to 115200bps */
 
-    SCFCR = FCR_TTRG_1 | FCR_RTRG_1;
-    IPRC_SCIF1(0xa);
+  SCFCR = FCR_TTRG_1 | FCR_RTRG_1;
+  IPRC_SCIF1(0xa);
 
-    SCSCR = SCR_RIE | SCR_TE | SCR_RE; /* enable transmit */
+  SCSCR = SCR_RIE | SCR_TE | SCR_RE; /* enable transmit */
 
 }
 
 unsigned char scif_putc(unsigned char c)
 {
-    while(!(SCFSR & FSR_TDFE));
-    SCFTDR = c;
-    SCFSR &= ~FSR_TDFE;
-    return c;
+  while(!(SCFSR & FSR_TDFE));
+  SCFTDR = c;
+  SCFSR &= ~FSR_TDFE;
+  return c;
 }
 
 /* interrupt handler */
 scif1_get(void)
 {
-    unsigned char c;
-    c = SCFRDR;
-    //cprintf("%c\n",c);
-    SCFSR &= ~(FSR_RDF | FSR_DR);
-    return c;
+  unsigned char c;
+  c = SCFRDR;
+  //cprintf("%c\n",c);
+  SCFSR &= ~(FSR_RDF | FSR_DR);
+  return c;
 }
 void do_scif1_read(void)
 {
-int c;
-c = scif1_get();
-consoleintr(c);
-return;
+  int c;
+  c = scif1_get();
+  consoleintr(c);
+  return;
 
 }
 
 int putc(int c)
 {
-    scif_putc(c);
-    if(c == '\n') {
-        scif_putc('\r');
-    }
-    return c;
+  scif_putc(c);
+  if(c == '\n') {
+    scif_putc('\r');
+  }
+  return c;
 }
 
 int putchar(int c)
 {
-    scif_putc(c);
-    if(c == '\n') {
-        scif_putc('\r');
-    }
-    return c;
+  scif_putc(c);
+  if(c == '\n') {
+    scif_putc('\r');
+  }
+  return c;
 }
-
-

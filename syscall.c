@@ -19,7 +19,6 @@ fetchint(struct proc *p, uint addr, int *ip)
   if(addr >= p->sz || addr+4 > p->sz)
     return -1;
   *ip = *(int*)(addr);
-  cprintf("ip is%x\n", *ip);
   return 0;
 }
 
@@ -54,7 +53,6 @@ argint(int n, int *ip)
 	default:
 		;
 }
-  cprintf("arg%x\n", &arg);
   int x = fetchint(proc, arg, ip);
   return x;
 }

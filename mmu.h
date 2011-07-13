@@ -158,7 +158,6 @@ static void set_urb(uint val)
     uint * mmucr = (uint *)MMUCR;
     if(val >= 64)
     {
-        cprintf("error : URB should less than 64\n");
        val = 63;
     }
     val <<= 18;
@@ -174,7 +173,6 @@ static void set_urc(uint val)
     uint * mmucr = (uint *)MMUCR;
     if(val >= 64)
     {
-        cprintf("error : URC should less than 64\n");
         val = 63;
     }
     val <<= 10;
@@ -189,7 +187,6 @@ static void set_urc(uint val)
 static void print_pteh()
 {
     uint * pteh = (uint *)PTEH;
-    cprintf("PTEH = %x\n", *pteh);
     return;
 }
 
@@ -203,7 +200,6 @@ static void set_pteh(uint val)
 static void print_ptea()
 {
     uint * ptea = (uint *)PTEA;
-    cprintf("PTEA = %x\n", *ptea);
     return;
 }
 
@@ -224,7 +220,6 @@ static void set_ptel(uint val)
 static void print_ptel()
 {
     uint * ptel = (uint *)PTEL;
-    cprintf("PTEL = %x\n", *ptel);
     return;
 }
 
@@ -244,7 +239,6 @@ static void set_ttb(uint val)
 static void print_ttb()
 {
     uint * ttb = (uint *)TTB;
-    cprintf("TTB = %x\n", *ttb);
     return;
 }
 

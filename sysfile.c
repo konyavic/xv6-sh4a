@@ -15,7 +15,6 @@ argfd(int fd, int *pfd, struct file **pf)
 {
   //int fd;
   struct file *f;
-  //cprintf("filenumber is%x\n", fd);
   if(fd < 0)
     return -1;
   if(fd < 0 || fd >= NOFILE || (f=proc->ofile[fd]) == 0)
@@ -35,7 +34,6 @@ fdalloc(struct file *f)
   int fd;
 
   for(fd = 0; fd < NOFILE; fd++){
-	cprintf("fd%u\n", fd);
     if(proc->ofile[fd] == 0){
       proc->ofile[fd] = f;
       return fd;
@@ -76,7 +74,6 @@ sys_write(int m, char *p, int n)
   struct file *f;
   //int n;
   //char *p;
-  //cprintf("m=%u,p=%c,n=%u\n", m, *p, n);
   if(argfd(m, 0, &f) < 0 || n < 0 || p < 0)
 //  if(m < 0 || n < 0 || p < 0)
     return -1;
@@ -221,18 +218,14 @@ create(char *path, short type, short major, short minor)
   if((dp = nameiparent(path, name)) == 0)
     return 0;
   ilock(dp);
-  cprintf("creat1\n");
   if((ip = dirlookup(dp, name, &off)) != 0){
-  cprintf("creat2\n");
     iunlockput(dp);
     ilock(ip);
     if(type == T_FILE && ip->type == T_FILE)
       return ip;
     iunlockput(ip);
-  cprintf("creat3\n");
     return 0;
   }
-    cprintf("creat4\n");
   if((ip = ialloc(dp->dev, type)) == 0)
     panic("create: ialloc");
 
@@ -254,7 +247,6 @@ create(char *path, short type, short major, short minor)
     panic("create: dirlink");
 
   iunlockput(dp);
-  cprintf("creat succeed\n");
   return ip;
 }
 
@@ -265,11 +257,9 @@ sys_open(char *path, int omode)
   int fd;
   struct file *f;
   struct inode *ip;
-  cprintf("path%c\nomode%x\n", *path, omode);
 
   if( omode < 0)
     return -1;
-  //cprintf("1");
   if(omode & O_CREATE){
     if((ip = create(path, T_FILE, 0, 0)) == 0)
       return -1;
@@ -277,10 +267,8 @@ sys_open(char *path, int omode)
 
     if((ip = namei(path)) == 0)
       return -1;
-        cprintf("1\n");
     ilock(ip);
     if(ip->type == T_DIR && omode != O_RDONLY){
-    cprintf("1open\n");
       iunlockput(ip);
       return -1;
     }
@@ -292,7 +280,6 @@ sys_open(char *path, int omode)
     iunlockput(ip);
     return -1;
   }
-    cprintf("2open\n");
   iunlock(ip);
   f->type = FD_INODE;
   f->ip = ip;
@@ -364,7 +351,6 @@ sys_exec(char *path, char *uargv)
  // if (*upath != 0)
   //{
  // *path= *upath;
-  //cprintf("uargv=%x\n", *uargv);
   //path++;
  // upath++;}
   //else{
@@ -383,7 +369,6 @@ sys_exec(char *path, char *uargv)
   //if (*uargv != 0)
   //{
   //argv[i]= uargv[i];
- // cprintf("argv%c\n", argv[i]);}
   //else{
   //argv[i] = 0;
  // break;
@@ -432,7 +417,6 @@ sys_exec(char *path, char *uargv)
  //                      );
    
    //uint ITLB = 0xf2000000;
-   //cprintf("itlb\n");
    //set_val_in_p2(0xf6003f80, 0xa37bf00);
    //switchuvm(proc);
 

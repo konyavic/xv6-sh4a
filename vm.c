@@ -168,7 +168,6 @@ void
 kvmalloc(void)
 {
   kpgdir = setupkvm();
-  cprintf("kpgdir%x\n\t", kpgdir);
   intpgdir = kpgdir;
 }
 
@@ -181,9 +180,7 @@ setupkvm(void)
   // Allocate page directory
   //pgdir = PGDIRFIX;
   if(!(pgdir = (pde_t *) pgtalloc()))
-  //cprintf("pgdir%x", pgdir);
     return 0;
-  cprintf("pgdir%x\n\t", pgdir);
   memset(pgdir, 0, PGSIZE);
   if(// Map IO space from 640K to 1Mbyte
      !mappages(pgdir, (void *)0x80000000, 0x20000000, 0x00000000, PTE_W) ||
@@ -232,17 +229,14 @@ void
 switchuvm(struct proc *p)
 {
   pushcli();
-  //cprintf("wwitch");
   // Setup TSS
   //cpu->gdt[SEG_TSS] = SEG16(STS_T32A, &cpu->ts, sizeof(cpu->ts)-1, 0);
   //cpu->gdt[SEG_TSS].s = 0;
   //cpu->ts.ss0 = SEG_KDATA << 3;
   //cpu->ts.esp0 = (uint)proc->kstack + KSTACKSIZE;
   //ltr(SEG_TSS << 3);
-  cprintf("p-dir%x\n", p->pgdir);
   if(p->pgdir == 0)
     panic("switchuvm: no pgdir\n");
-  //cprintf("wwitch");
   disable_mmu();
   clear_tlb();
   //set_val_in_p2();
@@ -272,12 +266,10 @@ void
 inituvm(pde_t *pgdir, char *init, uint sz)
 {
   char *mem = kalloc();
-  cprintf("mem%x\n", mem);
   if (sz >= PGSIZE)
     panic("inituvm: more than a page");
   memset(mem, 0, PGSIZE);
   mappages(pgdir, 0, PGSIZE, PADDR(mem) - KOFF, PTE_W|PTE_U|PTE_PWT|PTE_P);
-  cprintf("pgdir%x\n", *pgdir);
   memmove(mem, init, sz);
 }
 
@@ -312,13 +304,11 @@ allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
 {
   //if(newsz > USERTOP)
     //return 0;
-  //cprintf("olesz%xnewsz%x\n",oldsz, newsz);
   char *a = (char *)PGROUNDUP(oldsz);
   char *last = PGROUNDDOWN(newsz - 1);
   for (; a <= last; a += PGSIZE){
     char *mem = kalloc();
     if(mem == 0){
-      cprintf("allocuvm out of memory\n");
       deallocuvm(pgdir, newsz, oldsz);
       return 0;
     }
@@ -356,14 +346,12 @@ void
 freevm(pde_t *pgdir)
 {
   uint i;
-  cprintf("pgdir%x", pgdir);
   if(!pgdir)
     panic("freevm: no pgdir");
   //deallocuvm(pgdir, USERTOP, 0);
   for(i = 0; i < NPDENTRIES; i++){
     if(pgdir[i] & PTE_P)
       {
-      cprintf("freetask%x\n", PTE_ADDR(pgdir[i]));
       if ((PTE_ADDR(pgdir[i]) >= 0x8ce00000 && PTE_ADDR(pgdir[i]) < 0x90000000) || (PTE_ADDR(pgdir[i]) >= 0xce00000 && PTE_ADDR(pgdir[i]) < 0x10000000))
       kfree((void *) PTE_ADDR(pgdir[i]));
       //else if (PTE_ADDR(pgdir[i]) >= 0xc200000 && PTE_ADDR(pgdir[i]) < 0xc300000)
@@ -393,17 +381,14 @@ copyuvm(pde_t *pgdir, uint sz)
       panic("copyuvm: page not present\n");
     pa = PTE_ADDR(*pte);
     if(!(mem = kalloc()))
-    //cprintf("goto mai");
           goto bad;
     memmove(mem, (char *)pa + KOFF, PGSIZE);
-    cprintf("goto ato");
     if(!mappages(d, (void *)i, PGSIZE, PADDR(mem) - KOFF, PTE_W|PTE_U))
      goto bad;
   }
   return d;
 
 bad:
-    //cprintf("d%x\n", d);
   freevm(d);
   return 0;
 }

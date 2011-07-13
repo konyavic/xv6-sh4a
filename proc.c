@@ -83,13 +83,9 @@ procdump(void)
       state = states[p->state];
     else
       state = "???";
-    cprintf("%d %s %s", p->pid, state, p->name);
     if(p->state == SLEEPING){
       getcallerpcs((uint*)p->context->r15+2, pc);
-      for(i=0; i<10 && pc[i] != 0; i++)
-        cprintf(" %p", pc[i]);
     }
-    cprintf("\n");
   }
 }
 
@@ -134,10 +130,8 @@ found:
 
   sp -= sizeof *p->context;
   p->context = (struct context*)sp;
-  cprintf("p->context%x\n", p->context);
   memset(p->context, 0, sizeof *p->context);
   //p->context = (struct context*)sp - 0x80000000;
-  //cprintf("p->context%x\n", p->context);
   p->context->spc = (uint)forkret;
     p->context->ssr = 0x40000000;
   //p->context->pr = (uint)trapret;
@@ -155,7 +149,6 @@ userinit(void)
   initproc = p;
   if(!(p->pgdir = (pde_t *) pgtalloc()))
     panic("userinit: out of memory?");
-  cprintf("p->pgdir%x", p->pgdir);
   memset(p->pgdir, 0, PGTSIZE);
   inituvm(p->pgdir, _binary_initcode_start, (int)_binary_initcode_size);
   mappages(p->pgdir, PADDR(p->context) , PGSIZE, PADDR(p->context), PTE_W|PTE_U|PTE_PWT|PTE_P);
@@ -186,7 +179,6 @@ int
 growproc(int n)
 {
   uint sz = proc->sz;
-  //cprintf("sz%x\n", sz);
   if(n > 0){
     if(!(sz = allocuvm(proc->pgdir, sz, sz + n)))
       return -1;
@@ -216,17 +208,14 @@ fork(void)
   // Copy process state from p.
   if(!(np->pgdir = copyuvm(proc->pgdir, proc->sz))){
     stkfree(np->kstack);
-    cprintf("np->kstack", np->kstack);
     np->kstack = 0;
     np->state = UNUSED;
     return -1;
   }
-  cprintf("np->pgdir%x\n", np->pgdir);
   mappages(np->pgdir, PADDR(np->context), PGSIZE, PADDR(np->context), PTE_W|PTE_U|PTE_PWT|PTE_P);
   np->sz = proc->sz;
   np->parent = proc;
   *np->tf = *ktf;
-  cprintf("ktf->spc%x,ktf->pr%x\n", ktf->spc,ktf->pr);
 
   // Clear %eax so that fork returns 0 in the child.
   np->tf->r0 = 0;
@@ -239,9 +228,7 @@ fork(void)
  
   pid = np->pid;
   np->state = RUNNABLE;
-  cprintf("np->pid%u, np->state%u, np->pgdir%x\n", np->pid, np->state, np->pgdir);
   safestrcpy(np->name, proc->name, sizeof(proc->name));
-  //cprintf("np->name%x\n", pid);
   return pid;
 }
 
@@ -352,7 +339,6 @@ scheduler(void)
     acquire(&ptable.lock);
     glock = &ptable;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      //cprintf("p->state%x, p->pgdir%x\n", p->state, p->pgdir);
       if(p->state != RUNNABLE)
         continue;
 
@@ -371,7 +357,6 @@ scheduler(void)
 	if(!holding(&ptable.lock))
 		acquire(&ptable.lock);
       swtch(old_context, new_context);
-      cprintf("8"); 
       switchkvm();
 
       // Process is done running for now.
@@ -401,8 +386,6 @@ sched(void)
   intena = cpu->intena;
   cstack = proc->kstack + STKSIZE - 4;
   cstack = cstack - sizeof *proc->tf - 4;
-  cprintf("proc->tf%x\n", proc->tf);
-  cprintf("sctack%x\n", cstack);
       new_context= cpu->scheduler;
       old_context= &proc->context;
   swtch(old_context, new_context);
@@ -458,7 +441,6 @@ sleep(void *chan, struct spinlock *lk)
   // Go to sleep.
   proc->chan = chan;
   proc->state = SLEEPING;
-  cprintf("sched");
   sched();
 
   // Tidy up.

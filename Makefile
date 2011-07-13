@@ -36,13 +36,12 @@ AS = $(TOOLPREFIX)gas
 LD = $(TOOLPREFIX)ld
 OBJCOPY = $(TOOLPREFIX)objcopy
 OBJDUMP = $(TOOLPREFIX)objdump
-CFLAGS = -fno-builtin -Wall -MD -ggdb -nostdinc -I. -I"../crosstools/lib/gcc/sh4-linux/3.4.6/include/"
+CFLAGS = -fno-builtin -Wall -MD -ggdb -nostdinc -I. -I$(shell $(CC) -print-file-name=include)
 CFLAGS += 
 ASFLAGS = 
 # FreeBSD ld wants ``elf_i386_fbsd''
 LDFLAGS += 
-#LIB = /opt/shtools/lib/gcc/sh4-linux/3.4.6/libgcc.a
-LIB =
+LIB = $(shell $(CC) -print-libgcc-file-name)
 
 image: initcode $(OBJS) $(LIB) fs.img
 	$(OBJCOPY) -I binary fs.img fs_img.o

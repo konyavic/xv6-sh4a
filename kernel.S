@@ -68,7 +68,7 @@ XV_STACK:
      *                                                              *
      ****************************************************************/
 .balign 256, 0, 256
-ExpHandler:
+general_exception:
     mov.l 4f, r3				
     !stc  ssr, r0
     !shll r0
@@ -210,8 +210,7 @@ __exp_IMASK:
  *                                                              *
  ****************************************************************/
 .balign 1024, 0, 1024
-
-TLBmissHandler:
+tlb_exception:
 mov.l 4f, r3				
 !stc  ssr, r0
 !shll r0
@@ -356,7 +355,7 @@ __tlb_IMASK:
  *                                                              *
  ****************************************************************/
 .balign 512, 0, 512
-IRQHandler:
+intr_entry:
 mov.l 4f, r3				
 !stc  ssr, r0
 !shll r0

@@ -10,11 +10,11 @@
 #include "scif.h"
 #include "stdarg.h"
 
-
 extern char *skstack;
 extern char *kstack;
 extern struct cpu *cpu;       // This cpu.
 extern struct proc *proc;     // Current proc on this cpu.
+
 static void mpmain(void);
 void jkstack(void)  __attribute__((noreturn));
 void mainc(void);
@@ -28,7 +28,7 @@ main(void)
   consoleinit();   // I/O devices & their interrupts
   pgtinit();
   stkinit();
-  kinit();
+  kinit();         // initialize memory allocator
   jkstack();       // call mainc() on a properly-allocated stack 
 }
 
@@ -41,12 +41,11 @@ jkstack(void)
     panic("jkstack\n");
   char *top = kstack + STKSIZE + KOFF -4;
   asm volatile(
-      "mov %0, r15\n\t"
-      : 
-      : "r" (top)
+      "mov %0, r15\n"
+      :
+      : "r"(top)
       );
   mainc(); 
-  //load_r15(*top);                   
   panic("jkstack");
 }
 

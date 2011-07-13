@@ -26,130 +26,8 @@ static struct {
   int locking;
 } cons;
 
-//static void
-//printint(int xx, int base, int sgn)
-//{
-//  static char digits[] = "0123456789abcdef";
-//  char buf[16];
-//  int i = 0, neg = 0;
-//  uint x;
-
-//  if(sgn && xx < 0){
-//    neg = 1;
-//    x = -xx;
-//  } else
-//    x = xx;
-
-//  do{
-//    buf[i++] = digits[x % base];
-//  }while((x /= base) != 0);
-//  if(neg)
-//    buf[i++] = '-';
-
-//  while(--i >= 0)
-//    consputc(buf[i]);
-//}
-
-// Print to the console. only understands %d, %x, %p, %s.
-//void
-//{
-//  int i, c, state, locking;
-//  uint *argp;
-//  char *s;
-
-//  locking = cons.locking;
-//  if(locking)
-//    acquire(&cons.lock);
-
-//  argp = (uint*)(void*)(&fmt + 1);
-//  state = 0;
-//  for(i = 0; (c = fmt[i] & 0xff) != 0; i++){
-//    if(c != '%'){
-//      consputc(c);
-//      continue;
-//    }
-//    c = fmt[++i] & 0xff;
-//    if(c == 0)
-//      break;
-//    switch(c){
-//    case 'd':
-//      printint(*argp++, 10, 1);
-//      break;
-//    case 'x':
-//    case 'p':
-//      printint(*argp++, 16, 0);
-//      break;
-//    case 's':
-//      if((s = (char*)*argp++) == 0)
-//        s = "(null)";
-//      for(; *s; s++)
-//        consputc(*s);
-//      break;
-//    case '%':
-//      consputc('%');
-//      break;
-//    default:
-//      // Print unknown % sequence to draw attention.
-//      consputc('%');
-//      consputc(c);
-//      break;
-//    }
-//  }
-
-//  if(locking)
-//    release(&cons.lock);
-//}
-
-//void
-//panic(char *s)
-//{
-//  int i;
-//  uint pcs[10];
-  
-//  cli();
-//  cons.locking = 0;
-//  getcallerpcs(&s, pcs);
-//  for(i=0; i<10; i++)
-//  panicked = 1; // freeze other CPU
-//  for(;;)
-//    ;
-//}
-
 #define BACKSPACE 0x100
-//#define CRTPORT 0x3d4
-//static ushort *crt = (ushort*)0xb8000;  // CGA memory
-
-//static void
-//cgaputc(int c)
-//{
-//  int pos;
-  
-  // Cursor position: col + 80*row.
-//  outb(CRTPORT, 14);
-//  pos = inb(CRTPORT+1) << 8;
-//  outb(CRTPORT, 15);
-//  pos |= inb(CRTPORT+1);
-
-//  if(c == '\n')
-//    pos += 80 - pos%80;
-//  else if(c == BACKSPACE){
-//    if(pos > 0) --pos;
-//  } else
-//    crt[pos++] = (c&0xff) | 0x0700;  // black on white
-  
-//  if((pos/80) >= 24){  // Scroll up.
-//    memmove(crt, crt+80, sizeof(crt[0])*23*80);
-//    pos -= 80;
-//    memset(crt+pos, 0, sizeof(crt[0])*(24*80 - pos));
-//  }
-  
-//  outb(CRTPORT, 14);
-//  outb(CRTPORT+1, pos>>8);
-//  outb(CRTPORT, 15);
-//  outb(CRTPORT+1, pos);
-//  crt[pos] = ' ' | 0x0700;
-//}
-
+#define CRTPORT 0x3d4
 
 void
 consputc(int c)
@@ -218,47 +96,6 @@ consoleintr(int c)
   release(&input.lock);
 }
 
-//void
-//consoleintr(int (*getc)(void))
-//{
-//  int c;
-//
-//  acquire(&input.lock);
-//  while((c = getc()) >= 0){
-//    switch(c){
-//    case C('P'):  // Process listing.
-//      procdump();
-//      break;
-//    case C('U'):  // Kill line.
-//      while(input.e != input.w &&
-//            input.buf[(input.e-1) % INPUT_BUF] != '\n'){
-//        input.e--;
-//        consputc(BACKSPACE);
-//      }
-//      break;
-//    case C('H'): case '\x7f':  // Backspace
-//      if(input.e != input.w){
-//        input.e--;
-//        consputc(BACKSPACE);
-//      }
-//      break;
-//    default:
-//      if(c != 0 && input.e-input.r < INPUT_BUF){
-//        c = (c == '\r') ? '\n' : c;
-//        input.buf[input.e++ % INPUT_BUF] = c;
-//        consputc(c);
-//        if(c == '\n' || c == C('D') || input.e == input.r+INPUT_BUF){
-//          input.w = input.e;
-//          wakeup(&input.r);
-//        }
-//      }
-//      break;
-//    }
-//  }
-//  release(&input.lock);
-//}
-
-
 int
 consoleread(struct inode *ip, char *dst, int n)
 {
@@ -322,7 +159,6 @@ consoleinit(void)
   devsw[CONSOLE].read = consoleread;
   cons.locking = 1;
 
-  //picenable(IRQ_KBD);
-  //ioapicenable(IRQ_KBD, 0);
+  // XXX: intr setting
 }
 

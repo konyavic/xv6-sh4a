@@ -1,7 +1,6 @@
-#include <stdarg.h> /* for va_list, ... comes with gcc */
-//#include <stdio.h>
-#include <types.h>
-#include <sh.h>
+#include <stdarg.h>
+#include "types.h"
+#include "sh.h"
 //#include <proc.h>
 //#include <defs.h>
 //#include "types.h"

@@ -14,7 +14,6 @@
 #include "sh.h"
 
 #include <stdarg.h>
-#include <stdio.h>
 
 #include "scif.h"
 

@@ -1,5 +1,4 @@
 #include "stdio.h"
-#include "assert.h"
 #include "scif.h"
 #include "stdarg.h"
 #include "types.h"

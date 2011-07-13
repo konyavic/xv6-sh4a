@@ -1,6 +1,5 @@
 #include <stdarg.h> /* for va_list, ... comes with gcc */
 //#include <stdio.h>
-#include <assert.h>
 #include <types.h>
 #include <sh.h>
 //#include <proc.h>
@@ -321,7 +320,6 @@ void printf(int fd, char* format, ...)
 	//	extern void scif_init();
 
 	//	scif_init();
-	//	assert(!"You must call scif_init() before calling printf.");
 	//}
 
     va_start(args, format);

@@ -5,8 +5,6 @@
 #include "proc.h"
 #include "sh.h"
 
-#include "stdio.h"
-#include "assert.h"
 #include "scif.h"
 
 extern char *skstack;

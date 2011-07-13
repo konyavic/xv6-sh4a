@@ -3,7 +3,6 @@
 OBJS = \
 	kernel.o\
 	main.o\
-	assert.o\
 	bio.o\
 	exec.o\
 	file.o\

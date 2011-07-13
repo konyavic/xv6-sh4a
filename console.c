@@ -11,7 +11,7 @@
 #include "file.h"
 #include "mmu.h"
 #include "proc.h"
-#include "xv6.h"
+#include "sh.h"
 #include <stdarg.h>
 #include <stdio.h>
 #include <assert.h>

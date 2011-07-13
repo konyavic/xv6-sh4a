@@ -5,7 +5,7 @@
 #include "param.h"
 #include "mmu.h"
 #include "proc.h"
-#include "xv6.h"
+#include "sh.h"
 //#include "traps.h"
 #include "spinlock.h"
 #include "buf.h"

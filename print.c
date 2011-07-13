@@ -42,7 +42,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <types.h>
-#include <xv6.h>
+#include <sh.h>
 #include <proc.h>
 //#include <defs.h>
 

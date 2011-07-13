@@ -1,7 +1,7 @@
 #include "param.h"
 #include "types.h"
 #include "defs.h"
-#include "xv6.h"
+#include "sh.h"
 #include "mmu.h"
 #include "proc.h"
 #include "elf.h"

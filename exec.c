@@ -3,7 +3,7 @@
 #include "mmu.h"
 #include "proc.h"
 #include "defs.h"
-#include "xv6.h"
+#include "sh.h"
 #include "elf.h"
 
 

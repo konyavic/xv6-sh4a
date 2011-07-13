@@ -1,13 +1,15 @@
 #include "types.h"
 #include "defs.h"
 #include "param.h"
-#include "xv6.h"
+#include "mmu.h"
+#include "proc.h"
+#include "sh.h"
+
 #include "stdio.h"
 #include "assert.h"
 #include "scif.h"
 #include "stdarg.h"
-#include "mmu.h"
-#include "proc.h"
+
 
 extern char *skstack;
 extern char *kstack;
@@ -38,10 +40,11 @@ jkstack(void)
   if(!kstack)
     panic("jkstack\n");
   char *top = kstack + STKSIZE + KOFF -4;
-    cprintf("top%x\n", top);
-  __asm__ __volatile__("mov %0, r15\n\t"
-                        : : "r" (top)
-                       );
+  asm volatile(
+      "mov %0, r15\n\t"
+      : 
+      : "r" (top)
+      );
   mainc(); 
   //load_r15(*top);                   
   panic("jkstack");
@@ -71,15 +74,8 @@ mainc(void)
 static void
 mpmain(void)
 {
-  //if(cpunum() != mpbcpu()) {
-    //ksegment();
-    //lapicinit(cpunum());
- // }
- cprintf("7");  
-  vmenable();        // turn on paging
+  vmenable();         // turn on paging
   cprintf("cpu%d: starting\n", cpu->id);
-  //idtinit();       // load idt register
   cpu->booted = 1;
-  //print_ttb();
-  scheduler();     // start running processes
+  scheduler();        // start running processes
 }

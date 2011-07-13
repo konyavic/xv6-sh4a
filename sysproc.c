@@ -1,5 +1,5 @@
 #include "types.h"
-#include "xv6.h"
+#include "sh.h"
 #include "defs.h"
 #include "param.h"
 #include "mmu.h"

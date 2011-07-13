@@ -23,18 +23,11 @@ int
 main(void)
 {
   scif_init();        // serial port
-  cprintf("0\n");
-  //mpinit();        // collect info about this machine
-  //lapicinit(mpbcpu());
   ksegment();      // set up segments
-  cprintf("ksegment\n");
-  //picinit();       // interrupt controller
-  //ioapicinit();    // another interrupt controller
   consoleinit();   // I/O devices & their interrupts
   pgtinit();
   stkinit();
   kinit();
-  cprintf("1\n");         // initialize memory allocator
   jkstack();       // call mainc() on a properly-allocated stack 
 }
 

@@ -8,9 +8,7 @@ SECTIONS
 
     . = 0x8c800000;
     .start    : { *(.start) }
-    .EXP  : { *(.EXP) }
     .text     : { *(.text) }
-
     /* . = DATA_START */
     .data     : { *(.data) }
 

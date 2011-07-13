@@ -12,9 +12,11 @@
 #include "mmu.h"
 #include "proc.h"
 #include "sh.h"
+
 #include <stdarg.h>
 #include <stdio.h>
 #include <assert.h>
+
 #include "scif.h"
 
 static void consputc(int);
@@ -25,6 +27,105 @@ static struct {
   struct spinlock lock;
   int locking;
 } cons;
+
+static void
+printint(int xx, int base, int sgn)
+{
+  static char digits[] = "0123456789abcdef";
+  char buf[16];
+  int i = 0, neg = 0;
+  int x;
+
+  if(sgn && xx < 0){
+    neg = 1;
+    x = -xx;
+  } else
+    x = xx;
+
+  do{
+    buf[i++] = digits[x % base];
+  }while((x /= base) != 0);
+  if(neg)
+    buf[i++] = '-';
+
+  while(--i >= 0) {
+    consputc(buf[i]);
+  }
+}
+
+// Print to the console. only understands %d, %x, %p, %s.
+void
+cprintf(char *fmt, ...)
+{
+  int i, c, state, locking;
+  uint *argp;
+  char *s;
+
+  va_list ap;
+
+  locking = cons.locking;
+  if(locking)
+    acquire(&cons.lock);
+
+  argp = (uint*)(void*)(&fmt + 1);
+  state = 0;
+  va_start(ap, fmt);
+  for(i = 0; (c = fmt[i] & 0xff) != 0; i++){
+    if(c != '%'){
+      consputc(c);
+      continue;
+    }
+    c = fmt[++i] & 0xff;
+    if(c == 0)
+      break;
+    switch(c){
+    case 'd':
+      printint(va_arg(ap, int), 10, 1);
+      break;
+    case 'x':
+    case 'p':
+      printint(va_arg(ap, int), 16, 0);
+      break;
+    case 's':
+      if((s = (char*)va_arg(ap, char *)) == 0)
+        s = "(null)";
+      for(; *s; s++)
+        consputc(*s);
+      break;
+    case '%':
+      consputc('%');
+      break;
+    default:
+      // Print unknown % sequence to draw attention.
+      consputc('%');
+      consputc(c);
+      break;
+    }
+  }
+  va_end(ap);
+
+  if(locking)
+    release(&cons.lock);
+}
+
+void
+panic(char *s)
+{
+  int i;
+  uint pcs[10];
+  
+  cli();
+  cons.locking = 0;
+  cprintf("cpu%d: panic: ", cpu->id);
+  cprintf(s);
+  cprintf("\n");
+  getcallerpcs(&s, pcs);
+  for(i=0; i<10; i++)
+    cprintf(" %p", pcs[i]);
+  panicked = 1; // freeze other CPU
+  for(;;)
+    ;
+}
 
 #define BACKSPACE 0x100
 #define CRTPORT 0x3d4

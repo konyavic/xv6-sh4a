@@ -8,7 +8,6 @@
 #include "stdio.h"
 #include "assert.h"
 #include "scif.h"
-#include "stdarg.h"
 
 extern char *skstack;
 extern char *kstack;

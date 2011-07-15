@@ -1,7 +1,6 @@
 #define NPROC        64  // maximum number of processes
 #define PAGE       4096  // granularity of user-space memory allocation
 #define KSTACKSIZE PAGE  // size of per-process kernel stack
-//#define NCPU          8  // maximum number of CPUs
 #define NOFILE       16  // open files per process
 #define NFILE       100  // open files per system
 #define NBUF         10  // size of disk block cache
@@ -18,7 +17,6 @@
 #define SR_IMASK_CLEAR  0xffffff0f
 #define SR_RB_MASK		0x20000000
 
-#define VBR_INIT		0xdeadbeef
 #define kernel_prel  0x40000000
 #define proc_prel    0xbfffffff
 #define FL_IF        0x10000000      // Interrupt Enable
@@ -27,3 +25,5 @@
 #define STKSIZE	     0x1000        // stack size
 #define VMOFF	     0x70000000    // virtual stack off
 #define KOFF	     0x80000000    // kernel stack off
+
+#define STACK_SIZE  0x100

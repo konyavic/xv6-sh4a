@@ -16,6 +16,8 @@ static void mpmain(void);
 void jkstack(void)  __attribute__((noreturn));
 void mainc(void);
 
+unsigned char xv6_stack[STACK_SIZE];
+
 // Bootstrap processor starts running C code here.
 int
 main(void)

@@ -55,7 +55,7 @@ initcode: initcode.S
 tags: $(OBJS)
 	etags *.S *.c
 
-ULIB = ulib.o usys.o printf.o umalloc.o $(LIB)
+ULIB = ulib.o usys.o printf.o umalloc.o
 
 _%: %.o $(ULIB) $(LIB)
 	$(LD) $(LDFLAGS) -N -e main -Ttext 0 -o $@ $^

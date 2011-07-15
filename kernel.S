@@ -1,5 +1,6 @@
 .include	"vect.inc"
 .include	"syscall.h"
+#include    "param.h"
 
 .section .start, "ax"
 
@@ -33,14 +34,14 @@ start:
     bf          1b
 
     /* initialize stack point */
-    mov.l       XV_STACK, r0
+    mov.l       XV6_STACK, r0
     mov         r0, r15
 
     /* initialize vector base register */
     mov.l       VBR_INIT, r0
     ldc         r0, vbr
 
-    mov.l       XV_MAIN, r0
+    mov.l       XV6_MAIN, r0
     jmp         @r0
     nop
 
@@ -56,17 +57,17 @@ VBR_INIT:
 BSS_START:
     .long __bss_start
 BSS_END:
-    .long __bss_start+0x1000
-XV_MAIN:
+    .long __bss_end
+XV6_MAIN:
     .long main
-XV_STACK:
-    .long 0x8c900000-0x1000
+XV6_STACK:
+    .long xv6_stack+STACK_SIZE
 
-    /****************************************************************
-     *                                                              *
-     *  general exception handler (VBR + 0x100)                     *
-     *                                                              *
-     ****************************************************************/
+/****************************************************************
+*                                                              *
+*  general exception handler (VBR + 0x100)                     *
+*                                                              *
+****************************************************************/
 .balign 256, 0, 256
 general_exception:
     mov.l 4f, r3				

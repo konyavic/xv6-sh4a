@@ -6,15 +6,14 @@ ENTRY(start)
 SECTIONS
 {
     . = 0x8c800000;
-    .start    : { *(.start) }
-    .text     : { *(.text) }
-    /* . = DATA_START */
-    .data     : { *(.data) }
-
-    .bss	:{
+    .start  : { *(.start) }
+    .text   : { *(.text) }
+    .data   : { *(.data) }
+    . = ALIGN(32);
+    .bss    : {
         __bss_start = .;
         *(.bss)
         . = ALIGN(32);
+        __bss_end = .;
     }
 }
-

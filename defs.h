@@ -19,7 +19,7 @@ struct stat;
 //void            consoleinit(void);
 //void            cprintf(const char*, ...);
 //void            consoleintr(int(*)(void));
-void            panic(char*) __attribute__((noreturn));
+//void            panic(char*) __attribute__((noreturn));
 
 // exec.c
 int             exec(char*, char**);
@@ -65,12 +65,6 @@ int             exec(char*, char**);
 char*           kalloc(void);
 void            kfree(char*);
 void            kinit();
-char*           stkalloc(void);
-void            stkfree(char*);
-void            stkinit();
-char*           pgtalloc(void);
-void            pgtfree(char*);
-void            pgtinit();
 
 // kbd.c
 //void            kbdintr(void);
@@ -180,3 +174,7 @@ void            switchkvm();
 //void		enable_mmu(void);
 // number of elements in fixed-size array
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))
+
+void dump_pde(pde_t *, int also_dump_mem, int);
+void dump_pgd(pde_t *, int);
+void dump_mem(unsigned char *, int, int);

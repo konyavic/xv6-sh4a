@@ -3,7 +3,7 @@
 #include "mmu.h"
 #include "proc.h"
 #include "defs.h"
-#include "sh.h"
+#include "sh4a.h"
 #include "elf.h"
 
 
@@ -69,7 +69,7 @@ exec(char *path, char **argv)
     goto bad;
   if(elf.magic != ELF_MAGIC)
     goto bad;
-  if(!(pgdir = pgtalloc()))
+  if(!(pgdir = kalloc()))
     goto bad;
 
   // Load program into memory.
@@ -94,7 +94,7 @@ exec(char *path, char **argv)
   //proc->kstack = stkalloc();
   //proc->kstack = mem;
   //sp=0;
-  sp = proc->kstack + STKSIZE - 4;
+  sp = proc->kstack + PGSIZE - 4;
    mappages(pgdir, PADDR(proc->kstack) , PGSIZE, PADDR(proc->kstack), PTE_W|PTE_U|PTE_PWT|PTE_P);
   arglen = 0;
   for(argc=0; eargv[argc]; argc++)

@@ -3,7 +3,7 @@
 #include "param.h"
 #include "mmu.h"
 #include "proc.h"
-#include "sh.h"
+#include "sh4a.h"
 #include "syscall.h"
 
 // User code makes a system call with INT T_SYSCALL.

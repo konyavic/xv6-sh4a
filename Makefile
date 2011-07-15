@@ -37,7 +37,8 @@ LD = $(TOOLPREFIX)ld
 OBJCOPY = $(TOOLPREFIX)objcopy
 OBJDUMP = $(TOOLPREFIX)objdump
 CFLAGS = -fno-builtin -Wall -MD -ggdb -nostdinc -I. -I$(shell $(CC) -print-file-name=include)
-CFLAGS += 
+# important!
+CFLAGS += -m4-nofpu -DDEBUG
 ASFLAGS = 
 # FreeBSD ld wants ``elf_i386_fbsd''
 LDFLAGS += 

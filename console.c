@@ -11,7 +11,7 @@
 #include "file.h"
 #include "mmu.h"
 #include "proc.h"
-#include "sh.h"
+#include "sh4a.h"
 
 #include <stdarg.h>
 
@@ -27,12 +27,12 @@ static struct {
 } cons;
 
 static void
-printint(int xx, int base, int sgn)
+printint(int xx, uint base, int sgn)
 {
   static char digits[] = "0123456789abcdef";
   char buf[16];
   int i = 0, neg = 0;
-  int x;
+  uint x;
 
   if(sgn && xx < 0){
     neg = 1;

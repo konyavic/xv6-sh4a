@@ -1,13 +1,12 @@
 #include "param.h"
 #include "types.h"
 #include "defs.h"
-#include "sh.h"
+#include "sh4a.h"
 #include "mmu.h"
 #include "proc.h"
 #include "elf.h"
 
 #define USERTOP  0x3600000
-#define PGDIRFIX    0x8c000000
 
 static pde_t *kpgdir;  // for use in scheduler()
 extern struct cpu *bcpu;
@@ -46,35 +45,9 @@ ldtlb();
 void
 ksegment(void)
 {
-  //extern struct cpu cpus[1];
-  struct cpu *c;
-  uint sr;
-
-  //set_proc_prel();
-  // Map virtual addresses to linear addresses using identity map.
-  // Cannot share a CODE descriptor for both kernel and user
-  // because it would have to have DPL_USR, but the CPU forbids
-  // an interrupt from CPL=0 to DPL=3.
+  // MP is not supported
+  // SH4A has no segment
   bcpu = &cpus[0];
-  c = &cpus[0];
-  //c->scheduler->ssr= 0;
-  //sr= read_sr();
-  //sr|=kernel_prel;
-  //c->scheduler->ssr = sr;
-  //load_sr(c->scheduler->ssr);
-
-  //c->gdt[SEG_KCODE] = SEG(STA_X|STA_R, 0, 0xffffffff, 0);
-  //c->gdt[SEG_KDATA] = SEG(STA_W, 0, 0xffffffff, 0);
-  //c->gdt[SEG_UCODE] = SEG(STA_X|STA_R, 0, 0xffffffff, DPL_USER);
-  //c->gdt[SEG_UDATA] = SEG(STA_W, 0, 0xffffffff, DPL_USER);
-
-  // Map cpu, and curproc
-  //c->gdt[SEG_KCPU] = SEG(STA_W, &c->cpu, 8, 0);
-
-  //lgdt(c->gdt, sizeof(c->gdt));
-  //loadgs(SEG_KCPU << 3);
-  
-  // Initialize cpu-local storage.
   cpu = bcpu;
   proc = 0;
 }
@@ -82,29 +55,32 @@ ksegment(void)
 // Return the address of the PTE in page table pgdir
 // that corresponds to linear address va.  If create!=0,
 // create any required page table pages.
-//static pte_t *
-//walkpgdir(pde_t *pgdir, const void *va, int create)
-//{
-//  uint r;
-//  pte_t *pde;
-  //pte_t *pgtab;
+static pte_t *
+walkpgdir(pde_t *pgdir, const void *va, int create)
+{
+  uint r;
+  pde_t *pde;
+  pte_t *pgtab;
 
-//  return pde = &pgdir[PTX(va)];
-  //if(*pde & PTE_P){
-  //  pgtab = (pte_t*) PTE_ADDR(*pde);
-  //} else if(!create || !(r = (uint) kalloc()))
-  //  return 0;
-  //else {
-    //pgtab = (pte_t*) r;
+  pde = &pgdir[PDX(va)];
+#ifdef DEBUG
+  cprintf("%s: va=0x%x pde addr=0x%x val=%x\n", __func__, va, pde, *pde);
+#endif
+  if(*pde & PTE_P){
+    pgtab = (pte_t*) PTE_ADDR(*pde);
+  } else if(!create || !(r = (uint) kalloc()))
+    return 0;
+  else {
+    pgtab = (pte_t*) r;
     // Make sure all those PTE_P bits are zero.
-    //memset(pgtab, 0, PGSIZE);
-  //  // The permissions here are overly generous, but they can
+    memset(pgtab, 0, PGSIZE);
+    // The permissions here are overly generous, but they can
     // be further restricted by the permissions in the page table 
     // entries, if necessary.
-  //  *pde = PADDR(r) | PTE_P | PTE_W | PTE_U;
-  //}
-  //return pde;
-//}
+    *pde = PADDR(r) | PTE_P | PTE_W | PTE_U;
+  }
+  return &pgtab[PTX(va)];
+}
 
 // Create PTEs for linear addresses starting at la that refer to
 // physical addresses starting at pa. la and size might not
@@ -116,25 +92,24 @@ mappages(pde_t *pgdir, void *la, uint size, uint pa, int perm)
   char *last = PGROUNDDOWN(la + size - 1);
 
   while(1){
-    pte_t *pte = &pgdir[PTX(a)];
+    pte_t *pte = walkpgdir(pgdir, a, 1);
     //if(pte == 0)
     //  return 0;
     //if(*pte & PTE_P)
     //  panic("remap");
+#ifdef DEBUG
+    cprintf("%s: before: pte addr=0x%x val=%x\n", __func__, pte, *pte);
+#endif
     *pte = pa | perm | PTE_P | PTE_D | PTE_PS;
+#ifdef DEBUG
+    cprintf("%s: after: pte addr=0x%x val=%x\n", __func__, pte, *pte);
+#endif
     //*pte &= PTE_PCD;
     if(a == last)
       break;
     a += PGSIZE;
     pa += PGSIZE;
   }
-    //a+= PGSIZE;
-  //while(last <= 0x400000)
-  //{
-  //pte_t *pte = &pgdir[PTX(a)];
-  //*pte &= ~PTE_P;
-  //last += PGSIZE;
-  //}
   return 1;
 }
 
@@ -168,7 +143,7 @@ void
 kvmalloc(void)
 {
   kpgdir = setupkvm();
-  intpgdir = kpgdir;
+  intpgdir = kpgdir;  // XXX
 }
 
 // Set up kernel part of a page table.
@@ -178,20 +153,16 @@ setupkvm(void)
   pde_t *pgdir;
 
   // Allocate page directory
-  //pgdir = PGDIRFIX;
-  if(!(pgdir = (pde_t *) pgtalloc()))
+  if(!(pgdir = (pde_t *) kalloc()))
     return 0;
+#ifdef DEBUG
+  cprintf("%s: pgdir=0x%x\n", __func__, pgdir);
+#endif
   memset(pgdir, 0, PGSIZE);
-  if(// Map IO space from 640K to 1Mbyte
-     !mappages(pgdir, (void *)0x80000000, 0x20000000, 0x00000000, PTE_W) ||
-     // Map kernel and free memory pool
-     !mappages(pgdir, (void *)0xe0000000, 0x20000000, 0x00000000, PTE_W) ||
-     // Map devices such as ioapic, lapic, ...
-     !mappages(pgdir, (void *)0x00000000, 0x20000000, 0x00000000, PTE_W) ||
-     !mappages(pgdir, (void *)0xa0000000, 0x20000000, 0x00000000, PTE_W) ||   
-     !mappages(pgdir, (void *)0xc0000000, 0x20000000, 0x00000000, PTE_W)
-)
-    return 0;
+  // SH4A do not have to map the kernel space again,
+  // it can access P1 directly
+  //if(!mappages(pgdir, (void *)0x8c800000, PHYSTOP-0x8c800000, 0x0c800000, PTE_W))
+  //  return 0;
   return pgdir;
 }
 
@@ -213,6 +184,9 @@ vmenable(void)
 void
 switchkvm()
 {
+#ifdef DEBUG
+  cprintf("%s:\n", __func__);
+#endif
   pushcli();
   //clear_tlb();
   //disable_mmu();
@@ -228,6 +202,9 @@ switchkvm()
 void
 switchuvm(struct proc *p)
 {
+#ifdef DEBUG
+  cprintf("%s:\n", __func__);
+#endif
   pushcli();
   // Setup TSS
   //cpu->gdt[SEG_TSS] = SEG16(STS_T32A, &cpu->ts, sizeof(cpu->ts)-1, 0);
@@ -266,10 +243,13 @@ void
 inituvm(pde_t *pgdir, char *init, uint sz)
 {
   char *mem = kalloc();
+#ifdef DEBUG
+  cprintf("%s: mem=0x%x\n", __func__, mem);
+#endif
   if (sz >= PGSIZE)
     panic("inituvm: more than a page");
   memset(mem, 0, PGSIZE);
-  mappages(pgdir, 0, PGSIZE, PADDR(mem) - KOFF, PTE_W|PTE_U|PTE_PWT|PTE_P);
+  mappages(pgdir, 0, PGSIZE, PADDR(mem), PTE_W|PTE_U|PTE_PWT|PTE_P);
   memmove(mem, init, sz);
 }
 
@@ -313,7 +293,7 @@ allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
       return 0;
     }
     memset(mem, 0, PGSIZE);
-    mappages(pgdir, a, PGSIZE, PADDR(mem) - KOFF, PTE_W|PTE_U);
+    mappages(pgdir, a, PGSIZE, PADDR(mem), PTE_W|PTE_U);
   }
   return newsz > oldsz ? newsz : oldsz;
 }
@@ -351,14 +331,9 @@ freevm(pde_t *pgdir)
   //deallocuvm(pgdir, USERTOP, 0);
   for(i = 0; i < NPDENTRIES; i++){
     if(pgdir[i] & PTE_P)
-      {
-      if ((PTE_ADDR(pgdir[i]) >= 0x8ce00000 && PTE_ADDR(pgdir[i]) < 0x90000000) || (PTE_ADDR(pgdir[i]) >= 0xce00000 && PTE_ADDR(pgdir[i]) < 0x10000000))
       kfree((void *) PTE_ADDR(pgdir[i]));
-      //else if (PTE_ADDR(pgdir[i]) >= 0xc200000 && PTE_ADDR(pgdir[i]) < 0xc300000)
-      //stkfree((void *) (pgdir[i]&0xfffff000));
   }
-  }
-  pgtfree((void *) pgdir);
+  kfree((void *) pgdir);
 }
 
 
@@ -368,7 +343,7 @@ freevm(pde_t *pgdir)
 pde_t*
 copyuvm(pde_t *pgdir, uint sz)
 {
-  pde_t *d = pgtalloc();
+  pde_t *d = kalloc();
   pte_t *pte;
   uint pa, i;
   char *mem;
@@ -382,8 +357,8 @@ copyuvm(pde_t *pgdir, uint sz)
     pa = PTE_ADDR(*pte);
     if(!(mem = kalloc()))
           goto bad;
-    memmove(mem, (char *)pa + KOFF, PGSIZE);
-    if(!mappages(d, (void *)i, PGSIZE, PADDR(mem) - KOFF, PTE_W|PTE_U))
+    memmove(mem, (char *)pa, PGSIZE);
+    if(!mappages(d, (void *)i, PGSIZE, PADDR(mem), PTE_W|PTE_U))
      goto bad;
   }
   return d;
@@ -393,5 +368,134 @@ bad:
   return 0;
 }
 
+char dump_head[] = "        ";
+void dump_pde(pde_t *pde, int also_dump_mem, int level) 
+{
+  char *head = dump_head + sizeof(dump_head) - level - 1;
+  cprintf("%s--- %s start ---\n", head, __func__);
+  int i;
+  int skip = 0;
+  for (i = 0; i < PGSIZE/4; i += 8) {
+    if (i != 0 
+        && pde[i] == pde[i-8]
+        && pde[i+1] == pde[i-7]
+        && pde[i+2] == pde[i-6]
+        && pde[i+3] == pde[i-5]
+        && pde[i+4] == pde[i-4]
+        && pde[i+5] == pde[i-3]
+        && pde[i+6] == pde[i-2]
+        && pde[i+7] == pde[i-1]
+        ) {
+      if (!skip) {
+        cprintf("%s *\n", head);
+        skip = 1;
+      }
+      continue;
+    }
+    skip = 0;
+    cprintf(
+        "%s[0x%x] "
+        "0x%x, "
+        "0x%x, "
+        "0x%x, "
+        "0x%x, "
+        "0x%x, "
+        "0x%x, "
+        "0x%x, "
+        "0x%x\n",
+        head,
+        pde+i,
+        pde[i],
+        pde[i+1],
+        pde[i+2],
+        pde[i+3],
+        pde[i+4],
+        pde[i+5],
+        pde[i+6],
+        pde[i+7]
+        );
+    if (!also_dump_mem)
+      continue;
 
+    int j;
+    for (j = 0; j < 8; ++j) {
+      if (pde[i+j] != 0) {
+        dump_mem(PTE_ADDR(pde[i+j]), PGSIZE, level + 2);
+      }
+    }
+  }
+  cprintf("%s--- %s end ---\n", head, __func__);
+}
 
+void dump_pgd(pde_t *pgd, int level) 
+{
+  char *head = dump_head + sizeof(dump_head) - level - 1;
+  cprintf("%s--- %s start ---\n", head, __func__);
+  int i;
+  for (i = 0; i < PGSIZE/4; i += 8) {
+    if (pgd[i] != 0) {
+      cprintf("%spte=0x%x\n", head, pgd[i]);
+      dump_pde(PTE_ADDR(pgd[i]), 1, level+2);
+    }
+  }
+  cprintf("%s--- %s end ---\n", head, __func__);
+}
+
+void dump_mem(unsigned char *addr, int size, int level) 
+{
+  char *head = dump_head + sizeof(dump_head) - level - 1;
+  cprintf("%s--- %s start ---\n", head, __func__);
+  int i;
+  int skip = 0;
+  for (i = 0; i < PGSIZE/16; i += 16) {
+    if (i != 0 
+        && addr[i] == addr[i-16]
+        && addr[i+1] == addr[i-15]
+        && addr[i+2] == addr[i-14]
+        && addr[i+3] == addr[i-13]
+        && addr[i+4] == addr[i-12]
+        && addr[i+5] == addr[i-11]
+        && addr[i+6] == addr[i-10]
+        && addr[i+7] == addr[i-9]
+        && addr[i+8] == addr[i-8]
+        && addr[i+9] == addr[i-7]
+        && addr[i+10] == addr[i-6]
+        && addr[i+11] == addr[i-5]
+        && addr[i+12] == addr[i-4]
+        && addr[i+13] == addr[i-3]
+        && addr[i+14] == addr[i-2]
+        && addr[i+15] == addr[i-1]
+        ) {
+      if (!skip) {
+        cprintf("%s *\n", head);
+        skip = 1;
+      }
+      continue;
+    }
+    skip = 0;
+    cprintf(
+        "%s[0x%x] "
+        "%x %x %x %x %x %x %x %x "
+        "%x %x %x %x %x %x %x %x\n",
+        head,
+        addr+i,
+        addr[i],
+        addr[i+1],
+        addr[i+2],
+        addr[i+3],
+        addr[i+4],
+        addr[i+5],
+        addr[i+6],
+        addr[i+7],
+        addr[i+8],
+        addr[i+9],
+        addr[i+10],
+        addr[i+11],
+        addr[i+12],
+        addr[i+13],
+        addr[i+14],
+        addr[i+15]
+        );
+  }
+  cprintf("%s--- %s end ---\n", head, __func__);
+}

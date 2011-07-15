@@ -1,6 +1,5 @@
 #define NPROC        64  // maximum number of processes
-#define PAGE       4096  // granularity of user-space memory allocation
-#define KSTACKSIZE PAGE  // size of per-process kernel stack
+#define KSTACKSIZE 4096  // size of per-process kernel stack
 #define NOFILE       16  // open files per process
 #define NFILE       100  // open files per system
 #define NBUF         10  // size of disk block cache
@@ -21,9 +20,9 @@
 #define proc_prel    0xbfffffff
 #define FL_IF        0x10000000      // Interrupt Enable
 
-#define PGTSIZE	     0x4000        // pgtable size
-#define STKSIZE	     0x1000        // stack size
-#define VMOFF	     0x70000000    // virtual stack off
-#define KOFF	     0x80000000    // kernel stack off
+#define P1_START  0x80000000    // kernel stack off
 
-#define STACK_SIZE  0x100
+#define STACK_SIZE  0x1000
+
+//#define PHYSTOP  0x8d000000 // use phys mem up to here as free pool
+#define PHYSTOP  0x8c900000 // use phys mem up to here as free pool

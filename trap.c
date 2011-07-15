@@ -3,7 +3,7 @@
 #include "param.h"
 #include "mmu.h"
 #include "proc.h"
-#include "sh.h"
+#include "sh4a.h"
 //#include "traps.h"
 #include "spinlock.h"
 

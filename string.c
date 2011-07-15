@@ -1,5 +1,5 @@
 #include "types.h"
-#include "sh.h"
+#include "sh4a.h"
 
 void*
 memset(void *dst, int c, uint n)

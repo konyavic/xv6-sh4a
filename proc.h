@@ -29,7 +29,6 @@ struct trapframe *etf;
 uint *midtf;
 struct cpu cpus[1];
 struct cpu *bcpu;
-uint *glock;
 char *kstack, *cstack;
 char *skstack;
 extern pde_t *intpgdir;
@@ -196,3 +195,5 @@ struct proc{
 //   original data and bss
 //   fixed-size stack
 //   expandable heap
+
+void dump_proc(struct proc*);

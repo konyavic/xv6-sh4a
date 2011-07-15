@@ -151,7 +151,6 @@ swtch:
 
 .align 4
 1:	.long 0x80000000
-2:	.long 0x8c2ff000!kstack
 3:	.long -(0x80000000)
 4:	.long forkret
 5:	.long cstack
@@ -250,3 +249,28 @@ __SYS_IMASK:
 #  popl %ebx
 #  popl %ebp
 #  ret
+
+.global sys_call_table
+sys_call_table:
+.long sys_fork	/* 0  -  old "setup()" system call*/
+.long sys_exit
+.long sys_wait
+.long sys_pipe
+.long sys_write
+.long sys_read		/* 5 */
+.long sys_close
+.long sys_kill
+.long sys_exec
+.long sys_open
+.long sys_mknod		/* 10 */
+.long sys_unlink
+.long sys_fstat
+.long sys_link
+.long sys_mkdir
+.long sys_chdir		/* 15 */
+.long sys_dup
+.long sys_getpid	/* old break syscall holder */
+.long sys_sbrk
+.long sys_sleep
+.long sys_uptime		/* 20 */
+.long sys_test

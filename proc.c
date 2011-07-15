@@ -2,7 +2,7 @@
 #include "defs.h"
 #include "param.h"
 #include "mmu.h"
-#include "sh.h"
+#include "sh4a.h"
 #include "proc.h"
 #include "spinlock.h"
 
@@ -16,10 +16,9 @@ static struct proc *initproc;
 int nextpid = 1;
 extern struct context *new_context, *old_context;
 //extern struct context new_context, old_context;
-extern struct trapframe *ktf, *etf;
+extern struct trapframe *ktf;
 extern void forkret(void);
 extern void trapret(void);
-extern uint *glock;
 
 static void wakeup1(void *chan);
 
@@ -112,12 +111,11 @@ found:
   release(&ptable.lock);
 
   // Allocate kernel stack if possible.
-  if((p->kstack = stkalloc()) == 0){
+  if((p->kstack = kalloc()) == 0){
     p->state = UNUSED;
     return 0;
   }
-  sp = p->kstack + KSTACKSIZE -4;
-  
+  sp = p->kstack + KSTACKSIZE;
   
   // Leave room for trap frame.
   sp -= sizeof *p->tf;
@@ -131,9 +129,8 @@ found:
   sp -= sizeof *p->context;
   p->context = (struct context*)sp;
   memset(p->context, 0, sizeof *p->context);
-  //p->context = (struct context*)sp - 0x80000000;
   p->context->spc = (uint)forkret;
-    p->context->ssr = 0x40000000;
+  p->context->ssr = 0x40000000;
   //p->context->pr = (uint)trapret;
   return p;
 }
@@ -147,9 +144,8 @@ userinit(void)
   
   p = allocproc();
   initproc = p;
-  if(!(p->pgdir = (pde_t *) pgtalloc()))
+  if(!(p->pgdir = setupkvm()))
     panic("userinit: out of memory?");
-  memset(p->pgdir, 0, PGTSIZE);
   inituvm(p->pgdir, _binary_initcode_start, (int)_binary_initcode_size);
   mappages(p->pgdir, PADDR(p->context) , PGSIZE, PADDR(p->context), PTE_W|PTE_U|PTE_PWT|PTE_P);
   p->sz = PGSIZE;
@@ -207,7 +203,7 @@ fork(void)
 
   // Copy process state from p.
   if(!(np->pgdir = copyuvm(proc->pgdir, proc->sz))){
-    stkfree(np->kstack);
+    kfree(np->kstack);
     np->kstack = 0;
     np->state = UNUSED;
     return -1;
@@ -294,7 +290,7 @@ wait(void)
       if(p->state == ZOMBIE){
         // Found one.
         pid = p->pid;
-        stkfree(p->kstack);
+        kfree(p->kstack);
         p->kstack = 0;
         freevm(p->pgdir);
         p->state = UNUSED;
@@ -328,7 +324,9 @@ wait(void)
 void
 scheduler(void)
 {
-  //extern uint glock;
+#ifdef DEBUG
+  cprintf("%s:\n", __func__);
+#endif
   struct proc *p;
 
   for(;;){
@@ -337,7 +335,6 @@ scheduler(void)
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
-    glock = &ptable;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
         continue;
@@ -346,17 +343,13 @@ scheduler(void)
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
       proc = p;
-      //memmove(0x8c000000, p->pgdir, PGSIZE);
+#ifdef DEBUG
+      dump_proc(p);
+#endif
       switchuvm(p);
       //tlbinit();
       p->state = RUNNING;
-      etf = proc->tf;
-      old_context= &cpu->scheduler;
-      new_context= proc->context;
-      //release(&ptable.lock);
-	if(!holding(&ptable.lock))
-		acquire(&ptable.lock);
-      swtch(old_context, new_context);
+      swtch(&cpu->scheduler, proc->context);
       switchkvm();
 
       // Process is done running for now.
@@ -384,7 +377,7 @@ sched(void)
   if(read_sr()&FL_IF)
     panic("sched interruptible");
   intena = cpu->intena;
-  cstack = proc->kstack + STKSIZE - 4;
+  cstack = proc->kstack + PGSIZE - 4;
   cstack = cstack - sizeof *proc->tf - 4;
       new_context= cpu->scheduler;
       old_context= &proc->context;
@@ -498,3 +491,25 @@ kill(int pid)
 }
 
 
+void dump_proc(struct proc* p) 
+{
+  cprintf("--- %s start ---\n", __func__);
+  cprintf(
+      "name=%s, "
+      "sz=%d, "
+      "pgdir=0x%x, "
+      "kstack=0x%x, "
+      "state=%d, "
+      "pid=%d, "
+      "\n",
+      p->name,
+      p->sz,
+      p->pgdir,
+      p->kstack,
+      p->state,
+      p->pid
+      );
+  dump_pde(p->pgdir, 0, 2);
+  dump_pgd(p->pgdir, 2);
+  cprintf("--- %s end ---\n", __func__);
+}

@@ -75,13 +75,13 @@
 #define PADDR(a)       ((uint) a)
 
 // Page directory and page table constants.
-#define NPDENTRIES	4096		// page directory entries per page directory
+#define NPDENTRIES	1024		// page directory entries per page directory
 #define NPTENTRIES	1024		// page table entries per page table
 
-#define PGSIZE		0x100000		// bytes mapped by a page
+#define PGSIZE		4096		// bytes mapped by a page
 #define PGSHIFT		12		// log2(PGSIZE)
 
-#define PTXSHIFT	20		// offset of PTX in a linear address
+#define PTXSHIFT	12		// offset of PTX in a linear address
 #define PDXSHIFT	22		// offset of PDX in a linear address
 
 #define PGROUNDUP(sz)  (((sz)+PGSIZE-1) & ~(PGSIZE-1))
@@ -101,13 +101,13 @@
 //#define _PAGE_ACCESSED	0x400		/* software: page referenced */
 //#define _PAGE_FILE	_PAGE_WT	/* software: pagecache or swap? */
 
+#define PTE_PWT  0x001	// Write-Through
+#define PTE_D		0x004	// Dirty
 #define PTE_P		0x100	// Present
 #define PTE_W		0x020	// Writeable
 #define PTE_U		0x040	// User
-#define PTE_PWT		0x001	// Write-Through
 #define PTE_PCD		0xfffffff7	// Cache-Disable
 //#define PTE_A		0x020	// Accessed
-#define PTE_D		0x004	// Dirty
 #define PTE_PS		0x090	// Page Size
 //#define PTE_MBZ		0x180	// Bits must be zero
 

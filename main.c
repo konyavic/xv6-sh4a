@@ -3,12 +3,10 @@
 #include "param.h"
 #include "mmu.h"
 #include "proc.h"
-#include "sh.h"
+#include "sh4a.h"
 
 #include "scif.h"
 
-extern char *skstack;
-extern char *kstack;
 extern struct cpu *cpu;       // This cpu.
 extern struct proc *proc;     // Current proc on this cpu.
 
@@ -25,8 +23,6 @@ main(void)
   scif_init();     // serial port
   ksegment();      // set up segments
   consoleinit();   // I/O devices & their interrupts
-  pgtinit();
-  stkinit();
   kinit();         // initialize memory allocator
   jkstack();       // call mainc() on a properly-allocated stack 
 }
@@ -34,11 +30,14 @@ main(void)
 void
 jkstack(void)
 {
-  kstack = stkalloc();
-  skstack = stkalloc() + STKSIZE + KOFF - 4;
+  char *kstack = kalloc();
   if(!kstack)
     panic("jkstack\n");
-  char *top = kstack + STKSIZE + KOFF -4;
+  char *top = kstack + PGSIZE;
+#ifdef DEBUG
+  cprintf("%s: kstack=0x%x\n", __func__, kstack);
+  cprintf("%s: top=0x%x\n", __func__, top);
+#endif
   asm volatile(
       "mov %0, r15\n"
       :

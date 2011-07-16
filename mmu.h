@@ -132,28 +132,28 @@
 //#define FL_IF        0x10000000      // Interrupt Enable
 
 
-static void enable_mmu()
+inline static void enable_mmu()
 {
     uint * mmucr = (uint *)MMUCR;
     *mmucr |= 0x00000001;
     return;
 }
 
-static void disable_mmu()
+inline static void disable_mmu()
 {
     uint * mmucr = (uint *)MMUCR;
     *mmucr &= 0xfffffffe;
     return;
 }
 
-static void clear_tlb()
+inline static void clear_tlb()
 {
     uint * mmucr = (uint *)MMUCR;
     *mmucr |= 0x00000004;
     return;
 }
 
-static void set_urb(uint val)
+inline static void set_urb(uint val)
 {
     uint * mmucr = (uint *)MMUCR;
     if(val >= 64)
@@ -168,7 +168,7 @@ static void set_urb(uint val)
 
 }
 
-static void set_urc(uint val)
+inline static void set_urc(uint val)
 {
     uint * mmucr = (uint *)MMUCR;
     if(val >= 64)
@@ -184,59 +184,59 @@ static void set_urc(uint val)
 }
 
 
-static void print_pteh()
+inline static void print_pteh()
 {
     uint * pteh = (uint *)PTEH;
     return;
 }
 
-static void set_pteh(uint val)
+inline static void set_pteh(uint val)
 {
     uint * pteh = (uint *)PTEH;
     *pteh = (val & 0xffffffff);
     return;
 }
 
-static void print_ptea()
+inline static void print_ptea()
 {
     uint * ptea = (uint *)PTEA;
     return;
 }
 
-static void set_ptea(uint val)
+inline static void set_ptea(uint val)
 {
     uint * ptea = (uint *)PTEA;
     *ptea = (val & 0xffffffff);
     return;
 }
 
-static void set_ptel(uint val)
+inline static void set_ptel(uint val)
 {
     uint * ptel = (uint *)PTEL;
     *ptel = (val & 0xffffffff);
     return;
 }
 
-static void print_ptel()
+inline static void print_ptel()
 {
     uint * ptel = (uint *)PTEL;
     return;
 }
 
-static void ldtlb()
+inline static void ldtlb()
 {
     __asm__ __volatile__("ldtlb\n\t");
     return;
 }
 
-static void set_ttb(uint val)
+inline static void set_ttb(uint val)
 {
     uint * ttb = (uint *)TTB;
     * ttb = val;
     return;
 }
 
-static void print_ttb()
+inline static void print_ttb()
 {
     uint * ttb = (uint *)TTB;
     return;
@@ -340,7 +340,7 @@ static void print_ttb()
 //            );
 //}
 
-static inline void set_val_in_p2(unsigned int addr, unsigned int val)
+inline static void set_val_in_p2(unsigned int addr, unsigned int val)
 {
 	unsigned int __tempval;
 	__asm__ __volatile__(

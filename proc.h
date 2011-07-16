@@ -12,8 +12,6 @@
 struct cpu {
   uchar id;                    // Local APIC ID; index into cpus[] below
   struct context *scheduler;   // Switch here to enter scheduler
-  //struct taskstate ts;         // Used by x86 to find stack for interrupt
-  //struct segdesc gdt[NSEGS];   // x86 global descriptor table
   volatile uint booted;        // Has the CPU started?
   int ncli;                    // Depth of pushcli nesting.
   int intena;                  // Were interrupts enabled before pushcli?
@@ -61,7 +59,6 @@ struct proc *proc;     // Current proc on this cpu.
 // at the "Switch stacks" comment. Switch doesn't save eip explicitly,
 // but it is on the stack and allocproc() manipulates it.
 struct context {
-
     _reg_gp r0;
     _reg_gp r1;
     _reg_gp r2;
@@ -70,7 +67,6 @@ struct context {
     _reg_gp r5;
     _reg_gp r6;
     _reg_gp r7;
-    /* not-banked registers */
     _reg_gp r8;
     _reg_gp r9;
     _reg_gp r10;
@@ -78,40 +74,7 @@ struct context {
     _reg_gp r12;
     _reg_gp r13;
     _reg_gp r14;
-    /* control registers */
-    _reg_gp ssr;
-    _reg_gp spc;
-    _reg_gp sgr;
-    _reg_gp mach;
-    _reg_gp macl;
-    _reg_vt dbr;
-    
-    /* general purpose registers (bank1) */
-    _reg_gp r0_bank;
-    _reg_gp r1_bank;
-    _reg_gp r2_bank;
-    _reg_gp r3_bank;
-    _reg_gp r4_bank;
-    _reg_gp r5_bank;
-    _reg_gp r6_bank;
-    _reg_gp r7_bank;
-    /* system registers */
-    _reg_gp gbr;
-    _reg_gp pr;
     _reg_gp r15;
-    //_reg_gp sr;
-    /* dummy registers and vbr */
-    //_reg_gp pc;
-    //_reg_vt vbr600;
-   // _reg_vt vbr400;
-   // _reg_vt vbr100;
-    //_reg_vt vbr;
-    //_reg_gp intevt;  
-//uint edi;
-  //uint esi;
-  //uint ebx;
-  //uint ebp;
-  //uint eip;
 };
 
 struct trapframe {

@@ -1,4 +1,3 @@
-//#include <proc.h>
 # Context switch
 #
 #   void swtch(struct context **old, struct context *new);
@@ -8,21 +7,24 @@
 
 .globl swtch
 swtch:
-	/* set the old stack to r15*/
-  //mov r4, r15
-  //mov r15, r13
-  //mov.l 2f, r12
-  //cmp/hi r12, r13
-  //bt/s 8f
-  //nop
-  //nop
- // mov.l 5f, r13 
-  //mov.l @r13, r15
-  //mov.l r13, @r15
-	/* control registers */	
+  # swtch(&cpu->scheduler, proc->context);
+  # r4 = &cpu->scheduler
+  # r5 = proc->context
 
-  add #-4, r15
+  /* callee-save */
+  mov.l r14, @-r15
   sts.l pr, @-r15
+  add #-4, r15
+  mov r15, r14
+
+  /* return */
+  add #4, r14
+  mov r14, r15
+  lds.l @r15+, pr
+  mov.l @r15+, r14
+  rts
+  nop
+
   add #-36, r15
   stc.l dbr, @-r15
   sts.l macl, @-r15
@@ -47,62 +49,10 @@ swtch:
   mov.l r1, @-r15
   mov.l r0, @-r15 
 
-
- 
-  
-    /* general purpose registers (bank1) */
-//  stc.l r0_bank, @-r15
-//  stc.l r1_bank, @-r15
-//  stc.l r2_bank, @-r15
-//  stc.l r3_bank, @-r15
-//  stc.l r4_bank, @-r15
-//  stc.l r5_bank, @-r15
-//  stc.l r6_bank, @-r15
-//  stc.l r7_bank, @-r15
-	/* system registers */
-//  stc.l gbr, @-r15
-
-//  sts.l pr, @-r15
-//  stc.l sr, @-r15
-
-/* set the new stack to r15 */
-  //mov.l 2f, r1
-  //cmp/hi r15, r1
-  //bt/s  6f
-  //nop
-  //nop
-  //mov.l   3f, r1
-  //add     r1, r15
-  
 6:
   mov   r4, r1
   mov.l r15, @r1
 
-  //mov.l 2f, r1
-  //cmp/hi r5, r1
-  //bt/s  7f
-  //nop
-  //nop
-  //mov.l   3f, r1
-  //add     r1, r5
-  //mov.l @r5, r2
-  //mov   r5, r15
- // mov.l  1f, r1
- // add    r1, r15
-	/* system registers */
-//  ldc.l @r15+, sr
-//  lds.l @r15+, pr
-
-//  ldc.l @r15+, gbr
-    /* general purpose registers (bank1) */
-//  ldc.l @r15+, r0_bank
-//  ldc.l @r15+, r1_bank
-//  ldc.l @r15+, r2_bank
-//  ldc.l @r15+, r3_bank
-//  ldc.l @r15+, r4_bank
-//  ldc.l @r15+, r5_bank
-//  ldc.l @r15+, r6_bank
-//  ldc.l @r15+, r7_bank
 
 	/* general purpose registers (bank0) */
 7:
@@ -133,18 +83,6 @@ swtch:
   add #4, r5
   mov   r5, r15
   mov   #0, r5
-  //add   #44, r15
- // mov.l   3f,  r1
- // add   r1, r15
-  //mov.l 2f, r1
-  //mov   #0, r2
-  //mov.l r2, @r1
-  //mov.l 4f, r14
-  //jmp @r14
-  //nop
-  //nop
-//.global __RTE
-//__RTE:
   rte
   nop
   nop

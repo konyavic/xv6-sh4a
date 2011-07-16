@@ -129,8 +129,8 @@ found:
   sp -= sizeof *p->context;
   p->context = (struct context*)sp;
   memset(p->context, 0, sizeof *p->context);
-  p->context->spc = (uint)forkret;
-  p->context->ssr = 0x40000000;
+  //XXX p->context->spc = (uint)forkret;
+  //XXX p->context->ssr = 0x40000000;
   //p->context->pr = (uint)trapret;
   return p;
 }
@@ -149,24 +149,28 @@ userinit(void)
   inituvm(p->pgdir, _binary_initcode_start, (int)_binary_initcode_size);
   mappages(p->pgdir, PADDR(p->context) , PGSIZE, PADDR(p->context), PTE_W|PTE_U|PTE_PWT|PTE_P);
   p->sz = PGSIZE;
+  memset(p->tf, 0, sizeof(*p->tf));
 
   //p->context->spc = 0x0;
   //p->context->sgr = p->kstack;
-  memset(p->tf, 0, sizeof(*p->tf));
   //p->tf->cs = (SEG_UCODE << 3) | DPL_USER;
   //p->tf->ds = (SEG_UDATA << 3) | DPL_USER;
   //p->tf->es = p->tf->ds;
   //p->tf->ss = p->tf->ds;
   //p->tf->eflags = FL_IF;
   //p->tf->esp = PGSIZE;
-    p->tf->ssr = 0x00000000;
+  p->tf->ssr = 0x00000000;
   p->tf->spc = 0;  // beginning of initcode.S
-  //p->tf->r8 = 12345;
 
   safestrcpy(p->name, "initcode", sizeof(p->name));
   p->cwd = namei("/");
 
   p->state = RUNNABLE;
+
+#ifdef DEBUG
+  cprintf("%s:\n", __func__);
+  dump_proc(p);
+#endif
 }
 
 // Grow current process's memory by n bytes.
@@ -324,12 +328,12 @@ wait(void)
 void
 scheduler(void)
 {
-#ifdef DEBUG
-  cprintf("%s:\n", __func__);
-#endif
   struct proc *p;
 
   for(;;){
+#ifdef DEBUG
+    cprintf("%s: for loop\n", __func__);
+#endif
     // Enable interrupts on this processor.
     sti();
 
@@ -338,18 +342,23 @@ scheduler(void)
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
         continue;
+#ifdef DEBUG
+      cprintf("%s: found pid=%d\n", __func__, p->pid);
+#endif
 
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
       proc = p;
-#ifdef DEBUG
-      dump_proc(p);
-#endif
       switchuvm(p);
-      //tlbinit();
       p->state = RUNNING;
+#ifdef DEBUG
+      cprintf("%s: before swtch\n", __func__);
+#endif
       swtch(&cpu->scheduler, proc->context);
+#ifdef DEBUG
+      cprintf("%s: after swtch\n", __func__);
+#endif
       switchkvm();
 
       // Process is done running for now.
@@ -357,6 +366,7 @@ scheduler(void)
       proc = 0;
     }
     release(&ptable.lock);
+    while(1);
 
   }
 }
@@ -403,9 +413,7 @@ forkret(void)
 {
   // Still holding ptable.lock from scheduler.
   release(&ptable.lock);
-  trapret();
-  //__RTE();
-  //return;
+
   // Return to "caller", actually trapret (see allocproc).
 }
 

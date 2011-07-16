@@ -118,20 +118,19 @@ found:
   sp = p->kstack + KSTACKSIZE;
   
   // Leave room for trap frame.
-  sp -= sizeof *p->tf;
-  p->tf = (struct trapframe*)sp;
+  //sp -= sizeof *p->tf;
+  //p->tf = (struct trapframe*)sp;
   
   // Set up new context to start executing at forkret,
   // which returns to trapret (see below).
-  sp -= 4;
-  *(uint*)sp = (uint)trapret;
+  //sp -= 4;
+  //*(uint*)sp = (uint)trapret;
 
   sp -= sizeof *p->context;
   p->context = (struct context*)sp;
   memset(p->context, 0, sizeof *p->context);
-  //XXX p->context->spc = (uint)forkret;
-  //XXX p->context->ssr = 0x40000000;
-  //p->context->pr = (uint)trapret;
+  p->context->pr = (uint)forkret;
+  p->context->sr = 0x40000000;
   return p;
 }
 
@@ -159,8 +158,10 @@ userinit(void)
   //p->tf->ss = p->tf->ds;
   //p->tf->eflags = FL_IF;
   //p->tf->esp = PGSIZE;
-  p->tf->ssr = 0x00000000;
-  p->tf->spc = 0;  // beginning of initcode.S
+  p->context->ssr = 0x00000000;
+  p->context->spc = 0;  // beginning of initcode.S
+  //p->context->sgr = PGSIZE; // forbidden in r2dplus
+  p->context->r15 = PGSIZE;
 
   safestrcpy(p->name, "initcode", sizeof(p->name));
   p->cwd = namei("/");
@@ -354,6 +355,8 @@ scheduler(void)
       p->state = RUNNING;
 #ifdef DEBUG
       cprintf("%s: before swtch\n", __func__);
+      cprintf("%s: proc->context:\n", __func__);
+      debug_context(proc->context);
 #endif
       swtch(&cpu->scheduler, proc->context);
 #ifdef DEBUG
@@ -366,7 +369,7 @@ scheduler(void)
       proc = 0;
     }
     release(&ptable.lock);
-    while(1);
+    while(1); // XXX
 
   }
 }
@@ -411,6 +414,9 @@ yield(void)
 void
 forkret(void)
 {
+#ifdef DEBUG
+  cprintf("%s:\n", __func__);
+#endif
   // Still holding ptable.lock from scheduler.
   release(&ptable.lock);
 
@@ -521,3 +527,55 @@ void dump_proc(struct proc* p)
   dump_pgd(p->pgdir, 2);
   cprintf("--- %s end ---\n", __func__);
 }
+
+void debug_context(struct context *cx)
+{
+  cprintf("--- %s start ---\n", __func__);
+  cprintf("r0: 0x%x r1: 0x%x r2: 0x%x r3: 0x%x\n",
+      cx->r0,
+      cx->r1,
+      cx->r2,
+      cx->r3);
+  cprintf("r4: 0x%x r5: 0x%x r6: 0x%x r7: 0x%x\n",
+      cx->r4,
+      cx->r5,
+      cx->r6,
+      cx->r7);
+  cprintf("r8: 0x%x r9: 0x%x r10: 0x%x r11: 0x%x\n",
+      cx->r8,
+      cx->r9,
+      cx->r10,
+      cx->r11);
+  cprintf("r12: 0x%x r13: 0x%x r14: 0x%x r15: 0x%x\n",
+      cx->r12,
+      cx->r13,
+      cx->r14,
+      cx->r15);
+  cprintf("sr: 0x%x pc: 0x%x\n",
+      cx->sr,
+      cx->pc);
+  cprintf("ssr: 0x%x spc: 0x%x sgr: 0x%x\n",
+      cx->ssr,
+      cx->spc,
+      cx->sgr);
+  cprintf("gbr: 0x%x mach: 0x%x macl: 0x%x pr: 0x%x\n",
+      cx->gbr,
+      cx->mach,
+      cx->macl,
+      cx->pr);
+  cprintf("r0: 0x%x r1: 0x%x r2: 0x%x r3: 0x%x\n",
+      cx->r0_bank,
+      cx->r1_bank,
+      cx->r2_bank,
+      cx->r3_bank);
+  cprintf("r4: 0x%x r5: 0x%x r6: 0x%x r7: 0x%x\n",
+      cx->r4_bank,
+      cx->r5_bank,
+      cx->r6_bank,
+      cx->r7_bank);
+  cprintf("dbr: 0x%x\n",
+      cx->dbr);
+  cprintf("--- %s end ---\n", __func__);
+}
+
+char debug_str[] = "debug: %x\n";

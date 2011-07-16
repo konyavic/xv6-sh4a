@@ -70,6 +70,16 @@ XV6_STACK:
 ****************************************************************/
 .balign 256, 0, 256
 general_exception:
+    mov.l excp_EXPEVT, r5
+    mov.l @r5, r5
+    mov.l excp_debug_str, r4
+    mov.l excp_cprintf, r1
+    jsr @r1
+    nop
+debug_loop_excp:
+    bra debug_loop_excp
+    nop
+
     mov.l 4f, r3				
     !stc  ssr, r0
     !shll r0
@@ -205,6 +215,13 @@ __exp_IMASK:
 12:  .long -0x80000000
 13:  .long ktf	
 
+excp_EXPEVT: 
+  .long 0xff000024
+excp_cprintf:
+  .long cprintf
+excp_debug_str:
+  .long debug_str
+
 /****************************************************************
  *                                                              *
  *  tlb exception handler (VBR + 0x400)                         *
@@ -212,6 +229,10 @@ __exp_IMASK:
  ****************************************************************/
 .balign 1024, 0, 1024
 tlb_exception:
+debug_loop_tlb:
+    bra debug_loop_tlb
+    nop
+
 mov.l 4f, r3				
 !stc  ssr, r0
 !shll r0
@@ -348,6 +369,12 @@ __tlb_IMASK:
 13:  .long ktf
 
 
+tlb_EXPEVT: 
+  .long 0xff000024
+tlb_cprintf:
+  .long cprintf
+tlb_debug_str:
+  .long debug_str
 
 
 /****************************************************************

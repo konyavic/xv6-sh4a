@@ -39,7 +39,7 @@ OBJDUMP = $(TOOLPREFIX)objdump
 CFLAGS = -fno-builtin -Wall -MD -ggdb -nostdinc -I. -I$(shell $(CC) -print-file-name=include)
 # important!
 CFLAGS += -m4-nofpu -DDEBUG
-ASFLAGS = 
+ASFLAGS = -DDEBUG
 # FreeBSD ld wants ``elf_i386_fbsd''
 LDFLAGS += 
 LIB = $(shell $(CC) -print-libgcc-file-name)

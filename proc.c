@@ -22,34 +22,6 @@ extern void trapret(void);
 
 static void wakeup1(void *chan);
 
-static int
-mappages(pde_t *pgdir, void *la, uint size, uint pa, int perm)
-{
-  char *a = PGROUNDDOWN(la);
-  char *last = PGROUNDDOWN(la + size - 1);
-
-  while(1){
-    pte_t *pte = &pgdir[PTX(a)];
-    //if(pte == 0)
-    //  return 0;
-    //if(*pte & PTE_P)
-    //  panic("remap");
-    *pte = pa | perm | PTE_P | PTE_D | PTE_PS;
-    if(a == last)
-      break;
-    a += PGSIZE;
-    pa += PGSIZE;
-  }
-    //a+= PGSIZE;
-  //while(last <= 0x400000)
-  //{
-  //pte_t *pte = &pgdir[PTX(a)];
-  //*pte &= ~PTE_P;
-  //last += PGSIZE;
-  //}
-  return 1;
-}
-
 void
 pinit(void)
 {
@@ -129,7 +101,6 @@ found:
   sp -= sizeof *p->context;
   p->context = (struct context*)sp;
   memset(p->context, 0, sizeof *p->context);
-  p->context->pr = (uint)forkret;
   p->context->sr = 0x40000000;
   return p;
 }
@@ -146,7 +117,6 @@ userinit(void)
   if(!(p->pgdir = setupkvm()))
     panic("userinit: out of memory?");
   inituvm(p->pgdir, _binary_initcode_start, (int)_binary_initcode_size);
-  mappages(p->pgdir, PADDR(p->context) , PGSIZE, PADDR(p->context), PTE_W|PTE_U|PTE_PWT|PTE_P);
   p->sz = PGSIZE;
   memset(p->tf, 0, sizeof(*p->tf));
 
@@ -213,7 +183,7 @@ fork(void)
     np->state = UNUSED;
     return -1;
   }
-  mappages(np->pgdir, PADDR(np->context), PGSIZE, PADDR(np->context), PTE_W|PTE_U|PTE_PWT|PTE_P);
+  //XXX mappages(np->pgdir, PADDR(np->context), PGSIZE, PADDR(np->context), PTEL_DEFAULT);
   np->sz = proc->sz;
   np->parent = proc;
   *np->tf = *ktf;

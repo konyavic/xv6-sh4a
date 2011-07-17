@@ -66,7 +66,7 @@ walkpgdir(pde_t *pgdir, const void *va, int create)
 #ifdef DEBUG
   cprintf("%s: va=0x%x pde addr=0x%x val=%x\n", __func__, va, pde, *pde);
 #endif
-  if(*pde & PTE_P){
+  if(*pde & PTEL_V){
     pgtab = (pte_t*) PTE_ADDR(*pde);
   } else if(!create || !(r = (uint) kalloc()))
     return 0;
@@ -77,7 +77,7 @@ walkpgdir(pde_t *pgdir, const void *va, int create)
     // The permissions here are overly generous, but they can
     // be further restricted by the permissions in the page table 
     // entries, if necessary.
-    *pde = PADDR(r) | PTE_P | PTE_W | PTE_U;
+    *pde = PADDR(r) | PTEL_DEFAULT;
   }
   return &pgtab[PTX(va)];
 }
@@ -93,18 +93,17 @@ mappages(pde_t *pgdir, void *la, uint size, uint pa, int perm)
 
   while(1){
     pte_t *pte = walkpgdir(pgdir, a, 1);
-    //if(pte == 0)
-    //  return 0;
-    //if(*pte & PTE_P)
-    //  panic("remap");
+    if(pte == 0)
+      return 0;
+    if(*pte & PTEL_V)
+      panic("remap");
 #ifdef DEBUG
     cprintf("%s: before: pte addr=0x%x val=%x\n", __func__, pte, *pte);
 #endif
-    *pte = pa | perm | PTE_P | PTE_D | PTE_PS;
+    *pte = pa | perm | PTEL_V;
 #ifdef DEBUG
     cprintf("%s: after: pte addr=0x%x val=%x\n", __func__, pte, *pte);
 #endif
-    //*pte &= PTE_PCD;
     if(a == last)
       break;
     a += PGSIZE;
@@ -143,7 +142,6 @@ void
 kvmalloc(void)
 {
   kpgdir = setupkvm();
-  intpgdir = kpgdir;  // XXX
 }
 
 // Set up kernel part of a page table.
@@ -205,6 +203,20 @@ switchuvm(struct proc *p)
 
   //disable_mmu();
   clear_tlb();
+
+  // XXX: load tlb for process stack
+  pte_t *pte = PTE_ADDR(p->pgdir[0]); // initcode
+  uint addr = PTE_ADDR(pte[0]);
+  uint perm = PTE_PERM(pte[0]);
+
+#if 1
+  set_pteh(0x00000000);
+  set_ptel(addr|perm);
+  //set_urc();
+  cprintf("%s: PTEH=0x%x PTEL=0x%x\n", __func__, *(uint *)PTEH, *(uint *)PTEL);
+  ldtlb();
+#endif
+  
   //enable_mmu();
   
   popcli();
@@ -239,7 +251,7 @@ inituvm(pde_t *pgdir, char *init, uint sz)
   if (sz >= PGSIZE)
     panic("inituvm: more than a page");
   memset(mem, 0, PGSIZE);
-  mappages(pgdir, 0, PGSIZE, PADDR(mem), PTE_W|PTE_U|PTE_PWT|PTE_P);
+  mappages(pgdir, 0, PGSIZE, PADDR(mem), PTEL_DEFAULT);
   memmove(mem, init, sz);
 }
 
@@ -283,7 +295,7 @@ allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
       return 0;
     }
     memset(mem, 0, PGSIZE);
-    mappages(pgdir, a, PGSIZE, PADDR(mem), PTE_W|PTE_U);
+    mappages(pgdir, a, PGSIZE, PADDR(mem), PTEL_DEFAULT);
   }
   return newsz > oldsz ? newsz : oldsz;
 }
@@ -299,7 +311,7 @@ deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
   char *last = PGROUNDDOWN(oldsz - 1);
   for(; a <= last; a += PGSIZE){
     pte_t *pte = &pgdir[PTX(a)];
-    if(pte && (*pte & PTE_P) != 0){
+    if(pte && (*pte & PTEL_V) != 0){
       uint pa = PTE_ADDR(*pte);
       if(pa == 0)
         panic("kfree");
@@ -320,7 +332,7 @@ freevm(pde_t *pgdir)
     panic("freevm: no pgdir");
   //deallocuvm(pgdir, USERTOP, 0);
   for(i = 0; i < NPDENTRIES; i++){
-    if(pgdir[i] & PTE_P)
+    if(pgdir[i] & PTEL_V)
       kfree((void *) PTE_ADDR(pgdir[i]));
   }
   kfree((void *) pgdir);
@@ -342,13 +354,13 @@ copyuvm(pde_t *pgdir, uint sz)
   for(i = 0; i < sz; i += PGSIZE){
     if(!(pte = &pgdir[PTX(i)]))
       panic("copyuvm: pte should exist\n");
-    if(!(*pte & PTE_P))
+    if(!(*pte & PTEL_V))
       panic("copyuvm: page not present\n");
     pa = PTE_ADDR(*pte);
     if(!(mem = kalloc()))
           goto bad;
     memmove(mem, (char *)pa, PGSIZE);
-    if(!mappages(d, (void *)i, PGSIZE, PADDR(mem), PTE_W|PTE_U))
+    if(!mappages(d, (void *)i, PGSIZE, PADDR(mem), PTEL_DEFAULT))
      goto bad;
   }
   return d;

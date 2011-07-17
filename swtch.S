@@ -131,8 +131,14 @@ swtch:
   lds.l @r5+, mach
   lds.l @r5+, macl
   lds.l @r5+, pr
-  mov.l @r5+, r15 ! causing TLB miss
+  ! mov.l @r5+, r15 ! causing TLB miss
+  mov.l _stack, r15 ! causing TLB miss
   ! add #4, r5
+#if 0
+loop:
+  bra loop
+  nop
+#endif
   ! ldc.l @r5+, sr
   add #4, r5
   ! ignored pc
@@ -236,6 +242,9 @@ _cprintf:
   .long cprintf
 _debug_str:
   .long debug_str
+
+_stack:
+  .long 0x1000
 
 
 .global trapret

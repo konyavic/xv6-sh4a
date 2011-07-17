@@ -64,7 +64,7 @@
 #define PDX(la)		((((uint) (la)) >> PDXSHIFT) & 0x3FF)
 
 // page table index
-#define PTX(la)		((((uint) (la)) >> PTXSHIFT) & 0xFFF)
+#define PTX(la)		((((uint) (la)) >> PTXSHIFT) & 0x3FF)
 
 // construct linear address from indexes and offset
 #define PGADDR(d, t, o)	((uint) ((d) << PDXSHIFT | (t) << PTXSHIFT | (o)))
@@ -87,50 +87,48 @@
 #define PGROUNDUP(sz)  (((sz)+PGSIZE-1) & ~(PGSIZE-1))
 #define PGROUNDDOWN(a) ((char*)((((unsigned int)(a)) & ~(PGSIZE-1))))
 
-// Page table/directory entry flags.
-//#define	_PAGE_WT	0x001		/* WT-bit on SH-4, 0 on SH-3 */
-//#define _PAGE_HW_SHARED	0x002		/* SH-bit  : shared among processes */
-//#define _PAGE_DIRTY	0x004		/* D-bit   : page changed */
-//#define _PAGE_CACHABLE	0x008		/* C-bit   : cachable */
-//#define _PAGE_SZ0	0x010		/* SZ0-bit : Size of page */
-//#define _PAGE_RW	0x020		/* PR0-bit : write access allowed */
-//#define _PAGE_USER	0x040		/* PR1-bit : user space access allowed */
-//#define _PAGE_SZ1	0x080		/* SZ1-bit : Size of page (on SH-4) */
-//#define _PAGE_PRESENT	0x100		/* V-bit   : page is valid */
-//#define _PAGE_PROTNONE	0x200		/* software: if not present  */
-//#define _PAGE_ACCESSED	0x400		/* software: page referenced */
-//#define _PAGE_FILE	_PAGE_WT	/* software: pagecache or swap? */
+// PTEH
+// +-----------+--+----------+
+// | VPN 31:10 |xx| ASID 7:0 |
+// +-----------+--+----------+
+//
+// PTEL
+// +---+-----------+-+-+--+--+--+--+-+-+--+--+
+// |xxx| PPN 28:10 |x|V|SZ|PR|PR|SZ|C|D|SH|WT|
+// +---+-----------+-+-+--+--+--+--+-+-+--+--+
+//
+// pte
+// +-----------+---+-+--+--+--+--+-+-+--+--+
+// | PPN 31:12 |xxx|V|SZ|PR|PR|SZ|C|D|SH|WT|
+// +-----------+---+-+--+--+--+--+-+-+--+--+
 
-#define PTE_PWT  0x001	// Write-Through
-#define PTE_D		0x004	// Dirty
-#define PTE_P		0x100	// Present
-#define PTE_W		0x020	// Writeable
-#define PTE_U		0x040	// User
-#define PTE_PCD		0xfffffff7	// Cache-Disable
-//#define PTE_A		0x020	// Accessed
-#define PTE_PS		0x090	// Page Size
-//#define PTE_MBZ		0x180	// Bits must be zero
+// Page table/directory entry flags.
+#define	PTEL_WT         0x001 /* WT-bit on SH-4, 0 on SH-3 */
+#define PTEL_HW_SHARED  0x002 /* SH-bit  : shared among processes */
+#define PTEL_DIRTY      0x004 /* D-bit   : page changed */
+#define PTEL_CACHABLE   0x008 /* C-bit   : cachable */
+#define PTEL_SZ0        0x010 /* SZ0-bit : Size of page */
+#define PTEL_RW         0x020 /* PR0-bit : write access allowed */
+#define PTEL_USER       0x040 /* PR1-bit : user space access allowed */
+#define PTEL_SZ1        0x080 /* SZ1-bit : Size of page (on SH-4) */
+#define PTEL_V          0x100 /* V-bit   : page is valid */
+
+#define PTEL_DEFAULT    ( PTEL_WT | PTEL_SZ0 | PTEL_RW | PTEL_USER | PTEL_V | PTEL_DIRTY )
+// XXX: why causing miltiple hit without dirty?
+
+//#define PTE_PWT  0x001	// Write-Through
+//#define PTE_D		0x004	// Dirty
+//#define PTE_P		0x100	// Present
+//#define PTE_W		0x020	// Writeable
+//#define PTE_U		0x040	// User
+//#define PTE_PCD		0xfffffff7	// Cache-Disable
+////#define PTE_A		0x020	// Accessed
+//#define PTE_PS		0x090	// Page Size
+////#define PTE_MBZ		0x180	// Bits must be zero
 
 // Address in page table or page directory entry
 #define PTE_ADDR(pte)	((uint) (pte) & ~0xFFF)
-
-//typedef uint pte_t;
-
-//#define EXPEVT 0xff000024
-//#define INTEVT 0xff000028
-
-//#define SR_BL_ENABLE    0x10000000
-//#define SR_BL_DISABLE   0xefffffff
-//#define SR_MDRBBL_MASK  0x70000000
-//#define SR_IMASK_MASK   0x000000f0
-//#define SR_IMASK_CLEAR  0xffffff0f
-//#define SR_RB_MASK		0x20000000
-
-//#define VBR_INIT		0xdeadbeef
-//#define kernel_prel  0x40000000
-//#define proc_prel    0xbfffffff
-//#define FL_IF        0x10000000      // Interrupt Enable
-
+#define PTE_PERM(pte)	((uint) (pte) & 0x1FF)
 
 inline static void enable_mmu()
 {

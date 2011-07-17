@@ -6,35 +6,6 @@
 #include "sh4a.h"
 #include "elf.h"
 
-
-static int
-mappages(pde_t *pgdir, void *la, uint size, uint pa, int perm)
-{
-  char *a = PGROUNDDOWN(la);
-  char *last = PGROUNDDOWN(la + size - 1);
-
-  while(1){
-    pte_t *pte = &pgdir[PTX(a)];
-    //if(pte == 0)
-    //  return 0;
-    //if(*pte & PTE_P)
-    //  panic("remap");
-    *pte = pa | perm | PTE_P | PTE_D | PTE_PS;
-    if(a == last)
-      break;
-    a += PGSIZE;
-    pa += PGSIZE;
-  }
-    //a+= PGSIZE;
-  //while(last <= 0x400000)
-  //{
-  //pte_t *pte = &pgdir[PTX(a)];
-  //*pte &= ~PTE_P;
-  //last += PGSIZE;
-  //}
-  return 1;
-}
-
 int
 exec(char *path, char **argv)
 {
@@ -95,7 +66,7 @@ exec(char *path, char **argv)
   //proc->kstack = mem;
   //sp=0;
   sp = proc->kstack + PGSIZE - 4;
-   mappages(pgdir, PADDR(proc->kstack) , PGSIZE, PADDR(proc->kstack), PTE_W|PTE_U|PTE_PWT|PTE_P);
+  //XXX: mappages(pgdir, PADDR(proc->kstack) , PGSIZE, PADDR(proc->kstack), PTEL_DEFAULT);
   arglen = 0;
   for(argc=0; eargv[argc]; argc++)
     {

@@ -120,12 +120,36 @@ excp_no_change:
   jsr   @r1
   nop
 
+  /* restore trapframe */
+  mov.l @r15+, r0
+  mov.l @r15+, r1
+  mov.l @r15+, r2
+  mov.l @r15+, r3
+  mov.l @r15+, r4
+  mov.l @r15+, r5
+  mov.l @r15+, r6
+  mov.l @r15+, r7
+  mov.l @r15+, r8
+  mov.l @r15+, r9
+  mov.l @r15+, r10
+  mov.l @r15+, r11
+  mov.l @r15+, r12
+  mov.l @r15+, r13
+  mov.l @r15+, r14
+  ldc.l @r15+, spc
+  ldc.l @r15+, ssr
+  ! ldc.l @r15+, sgr  ! forbidden
+  add   #4, r15
+  ldc.l @r15+, gbr
+  lds.l @r15+, mach
+  lds.l @r15+, macl
+  lds.l @r15+, pr
+  /* return */
+  stc sgr, r15
+  rte
+  nop
+
 #ifdef DEBUG
-    mov r4, r5
-    mov.l excp_debug_str, r4
-    mov.l excp_cprintf, r1
-    jsr @r1
-    nop
     mov r15, r5
     mov.l excp_debug_str, r4
     mov.l excp_cprintf, r1

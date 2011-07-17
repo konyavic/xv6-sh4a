@@ -81,7 +81,7 @@ general_exception:
   /* current stack = r15 = proc->kstack */
   mov.l excp_proc, r15
   mov.l @r15, r15
-  mov.l @(8,r15), r15
+  mov.l @(8,r15), r15     ! XXX: better way to locate it?
 excp_no_change:
   /* save trapframe */
   sts.l	pr,   @-r15
@@ -110,6 +110,15 @@ excp_no_change:
   mov.l excp_EXPEVT, r4
   mov.l @r4, r4
   /* XXX: enable intr */
+
+  /* call the service routine */
+  mov.l excp_vect_table, r1
+  shlr2 r4
+  shlr  r4
+  add   r4, r1  ! r1 = vect_table + EXPEVT >> 2
+  mov.l @r1, r1
+  jsr   @r1
+  nop
 
 #ifdef DEBUG
     mov r4, r5
@@ -272,6 +281,8 @@ excp_SR_MD:
   .long 0x40000000
 excp_proc:
   .long proc
+excp_vect_table:
+  .long vect_table
 
 /****************************************************************
  *                                                              *
@@ -570,8 +581,8 @@ __INV_IMASK:
 19: .long vect_table
 
 
-.global system_call
-system_call:
+.global _system_call
+_system_call:
 mov.l 1f, r9
 mov.l @r9, r8
 

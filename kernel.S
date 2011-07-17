@@ -4,64 +4,63 @@
 
 .section .start, "ax"
 
-.global  start
-
+.global start
 start:
-    /* initialize the cache */
-    mov.l CCR_REG, r0
-    mov.l CCR_INIT, r1
-    mov.l r1, @r0
+  /* initialize the cache */
+  mov.l   CCR_REG, r0
+  mov.l   CCR_INIT, r1
+  mov.l   r1, @r0
 
-    /* initialize status registers */
-    mov.l SR_INIT, r1
-    ldc r1, sr
+  /* initialize status registers */
+  mov.l   SR_INIT, r1
+  ldc     r1, sr
 
-    /* initialize bss */
-    mov.l BSS_END, r1
-    mov.l BSS_START, r2
-    mov #0, r0
+  /* initialize bss */
+  mov.l   BSS_END, r1
+  mov.l   BSS_START, r2
+  mov     #0, r0
 1:
-    movca.l     r0, @r2
-    mov.l       r0, @(4,r2)
-    mov.l       r0, @(8,r2)
-    mov.l       r0, @(12,r2)
-    mov.l       r0, @(16,r2)
-    mov.l       r0, @(20,r2)
-    mov.l       r0, @(24,r2)
-    mov.l       r0, @(28,r2)
-    add         #32, r2
-    cmp/hs      r1, r2
-    bf          1b
+  movca.l r0, @r2
+  mov.l   r0, @(4,r2)
+  mov.l   r0, @(8,r2)
+  mov.l   r0, @(12,r2)
+  mov.l   r0, @(16,r2)
+  mov.l   r0, @(20,r2)
+  mov.l   r0, @(24,r2)
+  mov.l   r0, @(28,r2)
+  add     #32, r2
+  cmp/hs  r1, r2
+  bf      1b
 
-    /* initialize stack point */
-    mov.l       XV6_STACK, r0
-    mov         r0, r15
+  /* initialize stack point */
+  mov.l   XV6_STACK, r0
+  mov     r0, r15
 
-    /* initialize vector base register */
-    mov.l       VBR_INIT, r0
-    ldc         r0, vbr
+  /* initialize vector base register */
+  mov.l   VBR_INIT, r0
+  ldc     r0, vbr
 
-    mov.l       XV6_MAIN, r0
-    jmp         @r0
-    nop
+  mov.l   XV6_MAIN, r0
+  jmp     @r0
+  nop
 
 .align 4
 CCR_REG:
-    .long 0xff00001c
+  .long 0xff00001c
 CCR_INIT:
-    .long 0x90b
+  .long 0x90b
 SR_INIT:
-    .long 0x50000000
+  .long 0x50000000
 VBR_INIT:
-    .long start
+  .long start
 BSS_START:
-    .long __bss_start
+  .long __bss_start
 BSS_END:
-    .long __bss_end
+  .long __bss_end
 XV6_MAIN:
-    .long main
+  .long main
 XV6_STACK:
-    .long xv6_stack+STACK_SIZE
+  .long xv6_stack+STACK_SIZE
 
 /****************************************************************
 *                                                              *
@@ -70,8 +69,55 @@ XV6_STACK:
 ****************************************************************/
 .balign 256, 0, 256
 general_exception:
-    mov.l excp_EXPEVT, r5
-    mov.l @r5, r5
+  /*
+   * kernel stack -> kernel stack (no change)
+   * user stack   -> kernel stack (change)
+   */
+  stc     ssr, r15
+  shll    r15
+  shll    r15
+  bt/s    excp_no_change  ! SR.MD == 1 ?
+  stc     sgr, r15
+  /* current stack = r15 = proc->kstack */
+  mov.l excp_proc, r15
+  mov.l @r15, r15
+  mov.l @(8,r15), r15
+excp_no_change:
+  /* save trapframe */
+  sts.l	pr,   @-r15
+  sts.l macl, @-r15
+  sts.l mach, @-r15
+  stc.l gbr,  @-r15
+  stc.l sgr,  @-r15
+  stc.l ssr,  @-r15
+  stc.l spc,  @-r15
+  mov.l r14,  @-r15
+  mov.l r13,  @-r15
+  mov.l r12,  @-r15
+  mov.l r11,  @-r15
+  mov.l r10,  @-r15
+  mov.l r9,   @-r15
+  mov.l r8,   @-r15
+  mov.l r7,   @-r15
+  mov.l r6,   @-r15
+  mov.l r5,   @-r15
+  mov.l r4,   @-r15
+  mov.l r3,   @-r15
+  mov.l r2,   @-r15
+  mov.l r1,   @-r15
+  mov.l r0,   @-r15
+  /* save EXPEVT */
+  mov.l excp_EXPEVT, r4
+  mov.l @r4, r4
+  /* XXX: enable intr */
+
+#ifdef DEBUG
+    mov r4, r5
+    mov.l excp_debug_str, r4
+    mov.l excp_cprintf, r1
+    jsr @r1
+    nop
+    mov r15, r5
     mov.l excp_debug_str, r4
     mov.l excp_cprintf, r1
     jsr @r1
@@ -79,6 +125,7 @@ general_exception:
 debug_loop_excp:
     bra debug_loop_excp
     nop
+#endif
 
     mov.l 4f, r3				
     !stc  ssr, r0
@@ -221,6 +268,10 @@ excp_cprintf:
   .long cprintf
 excp_debug_str:
   .long debug_str
+excp_SR_MD:
+  .long 0x40000000
+excp_proc:
+  .long proc
 
 /****************************************************************
  *                                                              *

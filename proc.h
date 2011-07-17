@@ -107,61 +107,33 @@ struct context {
 };
 
 struct trapframe {
-
-    _reg_gp r0;
-    _reg_gp r1;
-    _reg_gp r2;
-    _reg_gp r3;
-    _reg_gp r4;
-    _reg_gp r5;
-    _reg_gp r6;
-    _reg_gp r7;
-    /* not-banked registers */
-    _reg_gp r8;
-    _reg_gp r9;
-    _reg_gp r10;
-    _reg_gp r11;
-    _reg_gp r12;
-    _reg_gp r13;
-    _reg_gp r14;
-    /* control registers */
-    _reg_gp spc;
-    _reg_gp pr;
-    _reg_gp ssr;
-    _reg_gp gbr;
-    _reg_gp mach;
-    _reg_gp macl;
-   /* general purpose registers (bank1) */
-    _reg_gp r4_rank;
-    _reg_gp r7_rank;
-
+  /* general purpose registers */
+  _reg_gp r0;
+  _reg_gp r1;
+  _reg_gp r2;
+  _reg_gp r3;
+  _reg_gp r4;
+  _reg_gp r5;
+  _reg_gp r6;
+  _reg_gp r7;
+  /* not-banked registers */
+  _reg_gp r8;
+  _reg_gp r9;
+  _reg_gp r10;
+  _reg_gp r11;
+  _reg_gp r12;
+  _reg_gp r13;
+  _reg_gp r14;
+  /* control registers */
+  _reg_gp spc;
+  _reg_gp ssr;
+  _reg_gp sgr;
+  _reg_gp gbr;
+  /* system registers */
+  _reg_gp mach;
+  _reg_gp macl;
+  _reg_gp pr;
 };
-//struct trapframe {
-//    _reg_gp r7_rank;
-//    _reg_gp r4_rank;
-//    _reg_gp macl;
-//    _reg_gp mach;
-//    _reg_gp gbr;
-//    _reg_gp ssr;
-//    _reg_gp pr;
-//    _reg_gp spc;
-//    _reg_gp r14;
-//    _reg_gp r13;
-//    _reg_gp r12;
-//    _reg_gp r11;
-//    _reg_gp r10;
-//    _reg_gp r9;
-//    _reg_gp r8;
-//    _reg_gp r7;
-//    _reg_gp r6;
-//    _reg_gp r5;
-//    _reg_gp r4;
-//    _reg_gp r3;
-//    _reg_gp r2;
-//    _reg_gp r1;
-//    _reg_gp r0;
-//
-//};
 
 enum procstate { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
 
@@ -189,4 +161,4 @@ struct proc{
 //   expandable heap
 
 void dump_proc(struct proc *);
-void debug_context(struct context *);
+void dump_context(struct context *);

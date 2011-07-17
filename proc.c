@@ -87,11 +87,14 @@ found:
     p->state = UNUSED;
     return 0;
   }
+#ifdef DEBUG
+  cprintf("%s: p->kstack=0x%x\n", __func__, p->kstack);
+#endif
   sp = p->kstack + KSTACKSIZE;
   
   // Leave room for trap frame.
-  //sp -= sizeof *p->tf;
-  //p->tf = (struct trapframe*)sp;
+  sp -= sizeof *p->tf;
+  p->tf = (struct trapframe*)sp;
   
   // Set up new context to start executing at forkret,
   // which returns to trapret (see below).
@@ -325,8 +328,9 @@ scheduler(void)
       p->state = RUNNING;
 #ifdef DEBUG
       cprintf("%s: before swtch\n", __func__);
-      cprintf("%s: proc->context:\n", __func__);
-      debug_context(proc->context);
+      cprintf("%s: proc->context=0x%x :\n", __func__, proc->context);
+      cprintf("%s: proc->kstack=0x%x :\n", __func__, proc->kstack);
+      dump_context(proc->context);
 #endif
       swtch(&cpu->scheduler, proc->context);
 #ifdef DEBUG
@@ -498,7 +502,7 @@ void dump_proc(struct proc* p)
   cprintf("--- %s end ---\n", __func__);
 }
 
-void debug_context(struct context *cx)
+void dump_context(struct context *cx)
 {
   cprintf("--- %s start ---\n", __func__);
   cprintf("r0: 0x%x r1: 0x%x r2: 0x%x r3: 0x%x\n",

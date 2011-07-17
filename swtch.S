@@ -68,28 +68,6 @@ swtch:
   mov.l r15, @r4
   /* end of store */
 
-#ifdef DEBUG
-  /* debug */
-  mov r15, r5
-  debug
-
-  mov r14, r5
-  debug
-
-  mov.l @r15, r5
-  debug
-
-  mov r15, r5
-  add #-132, r5
-  mov.l @r5, r5
-  debug
-
-  mov r15, r4
-  mov.l _debug_context, r1
-  jsr @r1
-  nop
-#endif
-
   /* start of load */
   /* general purpose registers (bank0) */
   mov.l @r5+, r0
@@ -131,28 +109,12 @@ swtch:
   lds.l @r5+, mach
   lds.l @r5+, macl
   lds.l @r5+, pr
-  ! mov.l @r5+, r15 ! causing TLB miss
-  mov.l _stack, r15 ! causing TLB miss
-  ! add #4, r5
-#if 0
-loop:
-  bra loop
-  nop
-#endif
+  mov.l @r5+, r15 ! causing TLB miss
   ! ldc.l @r5+, sr
   add #4, r5
   ! ignored pc
   add #4, r5
   /* end of load */
-
-#ifdef DEBUG
-  mov r15, r5
-  debug
-  stc spc, r5
-  debug
-  stc ssr, r5
-  debug
-#endif
 
   /* return */
   ! add #4, r14
@@ -236,8 +198,8 @@ loop:
 4:	.long forkret
 5:	.long cstack
 
-_debug_context:
-  .long debug_context
+_dump_context:
+  .long dump_context
 _cprintf:
   .long cprintf
 _debug_str:

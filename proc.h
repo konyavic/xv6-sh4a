@@ -79,8 +79,8 @@ struct context {
     /* control registers */
     _reg_gp ssr;
     _reg_gp spc;
-    _reg_gp sgr;
-    _reg_vt dbr;
+    //_reg_gp sgr;
+    //_reg_vt dbr;
     /* general purpose registers (bank1) */
     _reg_gp r0_bank;
     _reg_gp r1_bank;
@@ -95,10 +95,10 @@ struct context {
     _reg_gp mach;
     _reg_gp macl;
     _reg_gp pr;
-    _reg_gp r15;
     _reg_gp sr;
+    _reg_gp r15;
     /* dummy registers and vbr */
-    _reg_gp pc;
+    // _reg_gp pc;
     //_reg_vt vbr600;
     //_reg_vt vbr400;
     //_reg_vt vbr100;

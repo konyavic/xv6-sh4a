@@ -98,13 +98,14 @@ found:
   
   // Set up new context to start executing at forkret,
   // which returns to trapret (see below).
-  //sp -= 4;
-  //*(uint*)sp = (uint)trapret;
 
   sp -= sizeof *p->context;
   p->context = (struct context*)sp;
   memset(p->context, 0, sizeof *p->context);
   p->context->sr = 0x40000000;
+  p->context->pr = (uint)forkret;
+  p->context->r15 = p->tf;
+  p->context->r14 = p->kstack + KSTACKSIZE;
   return p;
 }
 
@@ -123,18 +124,19 @@ userinit(void)
   p->sz = PGSIZE;
   memset(p->tf, 0, sizeof(*p->tf));
 
-  //p->context->spc = 0x0;
-  //p->context->sgr = p->kstack;
-  //p->tf->cs = (SEG_UCODE << 3) | DPL_USER;
-  //p->tf->ds = (SEG_UDATA << 3) | DPL_USER;
-  //p->tf->es = p->tf->ds;
-  //p->tf->ss = p->tf->ds;
-  //p->tf->eflags = FL_IF;
-  //p->tf->esp = PGSIZE;
-  p->context->ssr = 0x00000000;
-  p->context->spc = 0;  // beginning of initcode.S
-  //p->context->sgr = PGSIZE; // forbidden in r2dplus
-  p->context->r15 = PGSIZE;
+#if 0
+  p->tf->cs = (SEG_UCODE << 3) | DPL_USER;
+  p->tf->ds = (SEG_UDATA << 3) | DPL_USER;
+  p->tf->es = p->tf->ds;
+  p->tf->ss = p->tf->ds;
+  p->tf->eflags = FL_IF;
+  p->tf->esp = PGSIZE;
+  p->tf->eip = 0;  // beginning of initcode.S
+#else
+  p->tf->ssr = 0x00000000;
+  p->tf->sgr = PGSIZE;
+  p->tf->spc = 0;  // beginning of initcode.S
+#endif
 
   safestrcpy(p->name, "initcode", sizeof(p->name));
   p->cwd = namei("/");
@@ -395,6 +397,13 @@ forkret(void)
   release(&ptable.lock);
 
   // Return to "caller", actually trapret (see allocproc).
+  asm volatile(
+      "mov.l %0, r1\n"
+      "jsr @r1\n"
+      "nop\n"
+      :
+      : "m" (trapret)
+      );
 }
 
 // Atomically release lock and sleep on chan.
@@ -525,6 +534,7 @@ void dump_context(struct context *cx)
       cx->r13,
       cx->r14,
       cx->r15);
+#if 0
   cprintf("sr: 0x%x pc: 0x%x\n",
       cx->sr,
       cx->pc);
@@ -537,6 +547,9 @@ void dump_context(struct context *cx)
       cx->mach,
       cx->macl,
       cx->pr);
+  cprintf("dbr: 0x%x\n",
+      cx->dbr);
+#endif
   cprintf("r0: 0x%x r1: 0x%x r2: 0x%x r3: 0x%x\n",
       cx->r0_bank,
       cx->r1_bank,
@@ -547,8 +560,6 @@ void dump_context(struct context *cx)
       cx->r5_bank,
       cx->r6_bank,
       cx->r7_bank);
-  cprintf("dbr: 0x%x\n",
-      cx->dbr);
   cprintf("--- %s end ---\n", __func__);
 }
 

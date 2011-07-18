@@ -129,6 +129,8 @@ excp_no_change:
   nop
 
   /* restore trapframe */
+.global trapret
+trapret:
   mov.l @r15+, r0
   mov.l @r15+, r1
   mov.l @r15+, r2

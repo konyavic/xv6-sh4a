@@ -138,4 +138,3 @@ sys_call_table:
 .long sys_sbrk
 .long sys_sleep
 .long sys_uptime		/* 20 */
-.long sys_test

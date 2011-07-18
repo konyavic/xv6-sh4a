@@ -27,11 +27,9 @@ struct trapframe *etf;
 uint *midtf;
 struct cpu cpus[1];
 struct cpu *bcpu;
-char *kstack, *cstack;
-char *skstack;
+char *kstack;
 extern pde_t *intpgdir;
 extern uint *midtf;
-extern char *cstack;
 //char firfs[10] = "/init\0";
 //extern char inits[];
 

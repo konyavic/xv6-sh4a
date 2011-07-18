@@ -14,8 +14,6 @@ struct {
 static struct proc *initproc;
 
 int nextpid = 1;
-extern struct context *new_context, *old_context;
-//extern struct context new_context, old_context;
 extern struct trapframe *ktf;
 extern void forkret(void);
 extern void trapret(void);
@@ -95,6 +93,7 @@ found:
   // Leave room for trap frame.
   sp -= sizeof *p->tf;
   p->tf = (struct trapframe*)sp;
+  p->tf->ssr = 0x00000000;
   
   // Set up new context to start executing at forkret,
   // which returns to trapret (see below).
@@ -133,7 +132,6 @@ userinit(void)
   p->tf->esp = PGSIZE;
   p->tf->eip = 0;  // beginning of initcode.S
 #else
-  p->tf->ssr = 0x00000000;
   p->tf->sgr = PGSIZE;
   p->tf->spc = 0;  // beginning of initcode.S
 #endif
@@ -173,11 +171,13 @@ growproc(int n)
 int
 fork(void)
 {
+#ifdef DEBUG
+  cprintf("%s: pid=%d\n", __func__, proc->pid);
+#endif
   int i, pid;
   struct proc *np;
 
   // Allocate process.
-  //release(&ptable.lock);
   if((np = allocproc()) == 0)
     return -1;
 
@@ -188,14 +188,15 @@ fork(void)
     np->state = UNUSED;
     return -1;
   }
-  //XXX mappages(np->pgdir, PADDR(np->context), PGSIZE, PADDR(np->context), PTEL_DEFAULT);
   np->sz = proc->sz;
   np->parent = proc;
-  *np->tf = *ktf;
+  *np->tf = *proc->tf;
+#ifdef DEBUG
+  cprintf("%s: proc->kstack=0x%x\n", __func__, proc->kstack);
+  cprintf("%s: np->kstack=0x%x\n", __func__, np->kstack);
+#endif
 
   // Clear %eax so that fork returns 0 in the child.
-  np->tf->r0 = 0;
-  //np->context->r0 = 0;
 
   for(i = 0; i < NOFILE; i++)
     if(proc->ofile[i])
@@ -256,6 +257,9 @@ exit(void)
 int
 wait(void)
 {
+#ifdef DEBUG
+  cprintf("%s: pid=%d\n", __func__, proc->pid);
+#endif
   struct proc *p;
   int havekids, pid;
 
@@ -307,9 +311,6 @@ scheduler(void)
   struct proc *p;
 
   for(;;){
-#ifdef DEBUG
-    cprintf("%s: for loop\n", __func__);
-#endif
     // Enable interrupts on this processor.
     sti();
 
@@ -330,8 +331,8 @@ scheduler(void)
       p->state = RUNNING;
 #ifdef DEBUG
       cprintf("%s: before swtch\n", __func__);
-      cprintf("%s: proc->context=0x%x :\n", __func__, proc->context);
-      cprintf("%s: proc->kstack=0x%x :\n", __func__, proc->kstack);
+      cprintf("%s: proc->context=0x%x \n", __func__, proc->context);
+      cprintf("%s: proc->kstack=0x%x \n", __func__, proc->kstack);
       dump_context(proc->context);
 #endif
       swtch(&cpu->scheduler, proc->context);
@@ -345,8 +346,6 @@ scheduler(void)
       proc = 0;
     }
     release(&ptable.lock);
-    while(1); // XXX
-
   }
 }
 
@@ -355,6 +354,9 @@ scheduler(void)
 void
 sched(void)
 {
+#ifdef DEBUG
+  cprintf("%s:\n", __func__);
+#endif
   int intena;
 
   if(!holding(&ptable.lock))
@@ -366,11 +368,7 @@ sched(void)
   if(read_sr()&FL_IF)
     panic("sched interruptible");
   intena = cpu->intena;
-  cstack = proc->kstack + PGSIZE - 4;
-  cstack = cstack - sizeof *proc->tf - 4;
-      new_context= cpu->scheduler;
-      old_context= &proc->context;
-  swtch(old_context, new_context);
+  swtch(&proc->context, cpu->scheduler);
   cpu->intena = intena;
   return;
 }
@@ -391,18 +389,23 @@ void
 forkret(void)
 {
 #ifdef DEBUG
-  cprintf("%s:\n", __func__);
+  cprintf("%s: pid=%d\n", __func__, proc->pid);
+  cprintf("%s: proc->tf->spc=0x%x\n", __func__, proc->tf->spc);
+  cprintf("%s: proc->tf->sgr=0x%x\n", __func__, proc->tf->sgr);
+  cprintf("%s: proc->tf->ssr=0x%x\n", __func__, proc->tf->ssr);
 #endif
   // Still holding ptable.lock from scheduler.
   release(&ptable.lock);
 
   // Return to "caller", actually trapret (see allocproc).
   asm volatile(
-      "mov.l %0, r1\n"
+      "add #8, r15\n"     // fix for the clobberred stack
+      "ldc %0, r0_bank\n"
+      "mov.l %1, r1\n"
       "jsr @r1\n"
       "nop\n"
       :
-      : "m" (trapret)
+      : "r"(0), "m"(trapret)
       );
 }
 
@@ -459,9 +462,9 @@ wakeup1(void *chan)
 void
 wakeup(void *chan)
 {
-  //acquire(&ptable.lock);
+  acquire(&ptable.lock);
   wakeup1(chan);
-  //release(&ptable.lock);
+  release(&ptable.lock);
 }
 
 // Kill the process with the given pid.

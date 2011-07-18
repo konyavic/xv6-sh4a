@@ -47,9 +47,6 @@ fetchstr(struct proc *p, uint addr, char **pp)
 int
 argint(int n, int *ip)
 {
-#ifdef DEBUG
-  cprintf("%s: n=%d\n", __func__, n);
-#endif
   int x;
   switch (n) {
     case 0:
@@ -74,9 +71,6 @@ argint(int n, int *ip)
       x = fetchint(proc, proc->tf->sgr + 4*n, ip);
       break;
   }
-#ifdef DEBUG
-  cprintf("%s: x=0x%x\n", __func__, x);
-#endif
   return x;
 }
 
@@ -159,15 +153,18 @@ void
 syscall(void)
 {
   int num = *((int *)TRA) >> 2;
-#ifdef DEBUG
-  cprintf("%s: tra=%d\n", __func__, num);
+  int ret;
+#ifdef DEBUGxxx
+  cprintf("%s: tra=%d, spc=0x%x\n", 
+      __func__, num, proc->tf->spc);
 #endif
   if(num >= 0 && num < NELEM(syscalls) && syscalls[num])
     // XXX: should use proc->context->r0 ?
-    proc->tf->r0 = syscalls[num]();
+    ret = syscalls[num]();
   else {
     cprintf("%d %s: unknown sys call %d\n",
             proc->pid, proc->name, num);
-    proc->tf->r0 = -1;
+    ret = -1;
   }
+  asm volatile("ldc %0, r0_bank" :: "r"(ret));
 }

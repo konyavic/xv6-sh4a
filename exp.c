@@ -35,7 +35,13 @@ void fpuexception(){;}
 void tlbdoulblehit(){;}
 void INT_Reserved140(){;}
 void INT_TRAPA(){;}
-void illigalinstruction(){;}
+
+void illigalinstruction()
+{
+  cprintf("%s:\n", __func__);
+  while(1);
+}
+
 void slotilligal(){;}
 void nmi(){;}
 void userbreak(){;}

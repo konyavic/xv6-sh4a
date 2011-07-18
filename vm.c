@@ -353,14 +353,14 @@ freevm(pde_t *pgdir)
 pde_t*
 copyuvm(pde_t *pgdir, uint sz)
 {
-  pde_t *d = kalloc();
+  pde_t *d = setupkvm();
   pte_t *pte;
   uint pa, i;
   char *mem;
 
   if(!d) return 0;
   for(i = 0; i < sz; i += PGSIZE){
-    if(!(pte = &pgdir[PTX(i)]))
+    if(!(pte = walkpgdir(pgdir, (void *)i, 0)))
       panic("copyuvm: pte should exist\n");
     if(!(*pte & PTEL_V))
       panic("copyuvm: page not present\n");
@@ -385,8 +385,8 @@ void tlb_register(uint va)
   uint perm = PTE_PERM(*pte);
   set_pteh(PTE_ADDR(va));
   set_ptel(pa|perm);
-  cprintf("%s: PTEH=0x%x PTEL=0x%x\n", __func__, 
-      *(uint *)PTEH, *(uint *)PTEL);
+  cprintf("%s: va=0x%x PTEH=0x%x PTEL=0x%x\n", __func__, 
+      va, *(uint *)PTEH, *(uint *)PTEL);
   ldtlb();
 }
 

@@ -5,43 +5,24 @@
 #include "mmu.h"
 #include "proc.h"
 
-
-int
-sys_test(void)
-{
-  //switchkvm();
-  //while(1){;}
-  //switchuvm(proc);
-  return;
-}
-
 int
 sys_fork(void)
 {
-  int pid;
- // switchkvm();
-  pid = fork();
-  //switchuvm(proc);
-  return pid;
+  return fork();
 }
 
 
 int
 sys_exit(void)
 {
-  //switchkvm();
   exit();
-  //switchuvm(proc);
   return 0;  // not reached
 }
 
 int
 sys_wait(void)
 {
-  //switchkvm();  
-  wait();
-  //switchuvm(proc);
-  return;
+  return wait();
 }
 
 int

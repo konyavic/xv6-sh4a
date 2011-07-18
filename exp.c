@@ -242,12 +242,3 @@ void trapa0(){;}
 
 //                 INT_REF_RCMI(){;}
 
-void system_call() {
-  uint reg;
-  cprintf("%s:\n", __func__);
-  asm volatile(
-      "stc r4_bank, %0"
-      : "=r"(reg)
-      );
-  cprintf("%s: r4_bank=\"%s\"\n", __func__, reg);
-}

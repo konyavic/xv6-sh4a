@@ -4,7 +4,6 @@
 
 .global start
 start:
-	mov #SYS_exec, r3
 	mov.l 4f, r4
 	mov.l 6f, r5
 	TRAPA #SYS_exec

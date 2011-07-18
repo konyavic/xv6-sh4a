@@ -9,6 +9,14 @@
 int
 exec(char *path, char **argv)
 {
+#ifdef DEBUG
+  cprintf("%s: path=%s\n", __func__, path);
+  char **tmp;
+  for(tmp=argv; *tmp != 0; ++tmp) {
+    cprintf("%s: argv[%d]=%s\n", __func__, tmp-argv, *tmp);
+  }
+  while(1);
+#endif
   char *s, *last;
   int i, argc, arglen, len, off;
   uint sz, spbottom, argp, esp;

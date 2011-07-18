@@ -6,6 +6,8 @@
 #define NINODE       50  // maximum number of active i-nodes
 #define NDEV         10  // maximum major device number
 #define ROOTDEV       1  // device number of file system root disk
+
+#define TRA    0xff000020
 #define EXPEVT 0xff000024
 #define INTEVT 0xff000028
 

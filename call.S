@@ -14,7 +14,7 @@ vect_table:
 .long	addresserrorW	//0x100 address error(write)
 .long	fpuexception	//0x120 FPU exception
 .long	tlbdoulblehit	//0x140 TLB double hits
-.long	system_call	//0x160 TRAPA
+.long	syscall	//0x160 TRAPA
 .long	illigalinstruction //0x180 illigal instruction
 .long	slotilligal	//0x1a0 slot illigal instruction
 .long	nmi		//0x1c0 NMI

@@ -338,91 +338,34 @@ sys_chdir(char *path)
 }
 
 int
-sys_exec(char *path, char *uargv)
+sys_exec(void)
 {
-  //char *path, *argv[20];
-  char *argv[20];
+  char *path, *argv[20];
   int i;
-  uint uarg;
-  //path = upath;
-  //for(i=0;; i++){
-    //if(i >= NELEM(argv))
-      //return -1;
- // if (*upath != 0)
-  //{
- // *path= *upath;
-  //path++;
- // upath++;}
-  //else{
- // *path = 0;
-  //break;
- // }
-//}
-  //if(argstr(0, &path) < 0 || argint(1, (int*)&uargv) < 0) {
-  //  return -1;
-  //}
-  //memset(argv, 0, sizeof(argv));
-  //*argv = *uargv;
-  //for(i=0;; i++){
-  //  if(i >= NELEM(argv))
-  //    return -1;
-  //if (*uargv != 0)
-  //{
-  //argv[i]= uargv[i];
-  //else{
-  //argv[i] = 0;
- // break;
-  //}
-  //  if(fetchint(proc, uargv+4*i, (int*)&uarg) < 0)
-  //    return -1;
-  //  if(uarg == 0){
-   //   argv[i] = 0;
-   //   break;
-   // }
-    //if(fetchstr(proc, uarg, &argv[i]) < 0)
-   //   return -1;
-  //}
-  switchkvm();
-  i = exec(path, uargv);
-//  	asm volatile ("mov %0, r10\n\t"
-//	"mov.l 11f, r0\n\t"
-//	"add r0, r10\n\t"
-//	"mov   #84, r0\n\t"
-//	"mov.l %0, @-r10\n\t"
-	
-//"1:	cmp/eq #0, r0\n\t"
-//	"bt 2f\n\t"
-
-//	"!mov   #84, r3\n\t"
-//	"mov.l @(r0, r15), r3\n\t"
-//	"mov.l r3, @-r10\n\t"
-//	"add   #-4, r0\n\t"
-//	"bf 1b\n\t"
-
-//"2:	nop\n\t"
-//	"nop\n\t"
-//	"mov r10, r15\n\t"
-
-
-//".align 4\n\t"
-//"11:	.long 0x80000000\n\t"
-//	: : "r"(proc->context->r15));
-  //swtch_stack(proc->context->r15);
-  //__asm__ __volatile__(
-	//"mov   #108, r0\n\t"	
-	//"mov.l %0, @(r0, r15)\n\t"
-//	"mov   #88, r0\n\t"	
-//	"mov.l %1, @(r0, r15)\n\t"
- //                       : : "r" (proc->context->r15), "r"(proc->context->spc)
- //                      );
-   
-   //uint ITLB = 0xf2000000;
-   //set_val_in_p2(0xf6003f80, 0xa37bf00);
-   //switchuvm(proc);
-
-//swtch_stack(proc->context->r15);
-   //exe_return();
-  return i;
+  uint uargv, uarg;
+  if(argstr(0, &path) < 0 || argint(1, (int*)&uargv) < 0) {
+    return -1;
+  }
+#ifdef DEBUG
+  cprintf("%s: path=%s, argv=0x%x\n", __func__, path, uargv);
+#endif
+  memset(argv, 0, sizeof(argv));
+  for(i=0;; i++){
+    if(i >= NELEM(argv))
+      return -1;
+    if(fetchint(proc, uargv+4*i, (int*)&uarg) < 0)
+      return -1;
+    if(uarg == 0){
+      argv[i] = 0;
+      break;
+    }
+    if(fetchstr(proc, uarg, &argv[i]) < 0)
+      return -1;
+#ifdef DEBUG
+    cprintf("%s: argv[%d]=%s\n", __func__, i, argv[i]);
+#endif
+  }
+  return exec(path, argv);
 }
 
 int

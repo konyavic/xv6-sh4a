@@ -41,19 +41,42 @@ fetchstr(struct proc *p, uint addr, char **pp)
 }
 
 // Fetch the nth 32-bit system call argument.
+// SH4A:
+// According to GCC calling convention, the first four 
+// arguments are stored to register r4 to r7, respectively.
 int
 argint(int n, int *ip)
 {
-  int arg;
-  switch(n){
-	case 0:
-		__asm__ __volatile__("mov r4, %0"
-					:"=r" (arg)
-					:);
-	default:
-		;
-}
-  int x = fetchint(proc, arg, ip);
+#ifdef DEBUG
+  cprintf("%s: n=%d\n", __func__, n);
+#endif
+  int x;
+  switch (n) {
+    case 0:
+      asm volatile ("stc r4_bank, %0" : "=r"(x));
+      *ip = x;
+      break;
+    case 1:
+      asm volatile ("stc r5_bank, %0" : "=r"(x));
+      *ip = x;
+      break;
+    case 2:
+      asm volatile ("stc r6_bank, %0" : "=r"(x));
+      *ip = x;
+      break;
+    case 3:
+      asm volatile ("stc r7_bank, %0" : "=r"(x));
+      *ip = x;
+      break;
+    default:
+      // Fetch from stack
+      // XXX: NOT TESTSED
+      x = fetchint(proc, proc->tf->sgr + 4*n, ip);
+      break;
+  }
+#ifdef DEBUG
+  cprintf("%s: x=0x%x\n", __func__, x);
+#endif
   return x;
 }
 
@@ -108,5 +131,48 @@ extern int sys_wait(void);
 extern int sys_write(void);
 extern int sys_uptime(void);
 
+static int (*syscalls[])(void) = {
+[SYS_chdir]   sys_chdir,
+[SYS_close]   sys_close,
+[SYS_dup]     sys_dup,
+[SYS_exec]    sys_exec,
+[SYS_exit]    sys_exit,
+[SYS_fork]    sys_fork,
+[SYS_fstat]   sys_fstat,
+[SYS_getpid]  sys_getpid,
+[SYS_kill]    sys_kill,
+[SYS_link]    sys_link,
+[SYS_mkdir]   sys_mkdir,
+[SYS_mknod]   sys_mknod,
+[SYS_open]    sys_open,
+[SYS_pipe]    sys_pipe,
+[SYS_read]    sys_read,
+[SYS_sbrk]    sys_sbrk,
+[SYS_sleep]   sys_sleep,
+[SYS_unlink]  sys_unlink,
+[SYS_wait]    sys_wait,
+[SYS_write]   sys_write,
+[SYS_uptime]  sys_uptime,
+};
 
-
+void
+syscall(void)
+{
+  int num = *((int *)TRA) >> 2;
+#ifdef DEBUG
+  uint r4_bank, r5_bank;
+  cprintf("%s: tra=%d\n", __func__, num);
+  asm volatile("stc r4_bank, %0" : "=r"(r4_bank));
+  asm volatile("stc r5_bank, %0" : "=r"(r5_bank));
+  cprintf("%s: r4_bank=0x%x, \"%s\"\n", __func__, r4_bank, r4_bank);
+  cprintf("%s: r5_bank=0x%x\n", __func__, r5_bank);
+#endif
+  if(num >= 0 && num < NELEM(syscalls) && syscalls[num])
+    // XXX: should use proc->context->r0 ?
+    proc->tf->r0 = syscalls[num]();
+  else {
+    cprintf("%d %s: unknown sys call %d\n",
+            proc->pid, proc->name, num);
+    proc->tf->r0 = -1;
+  }
+}

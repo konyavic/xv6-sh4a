@@ -78,10 +78,18 @@ general_exception:
   shll    r15
   bt/s    excp_no_change  ! SR.MD == 1 ?
   stc     sgr, r15
-  /* current stack = r15 = proc->kstack */
-  mov.l excp_proc, r15
-  mov.l @r15, r15
-  mov.l @(8,r15), r15     ! XXX: better way to locate it?
+  /* current stack = r15 = proc->kstack + KSTACKSIZE */
+  mov.l r2, @-r15
+  mov.l r1, @-r15
+  mov.l excp_proc, r1
+  mov.l @r1, r1
+  mov.l @(8,r1), r1 ! XXX: better way to locate proc->kstack?
+  mov.l excp_STACK_SIZE, r2
+  add   r2, r1
+  mov   r15, r2     ! r2 = old stack
+  mov   r1, r15     ! r15 = new stack
+  mov.l @r2+, r1
+  mov.l @r2+, r2
 excp_no_change:
   /* save trapframe */
   sts.l	pr,   @-r15
@@ -173,6 +181,8 @@ excp_proc:
   .long proc
 excp_vect_table:
   .long vect_table
+excp_STACK_SIZE:
+  .long KSTACKSIZE
 
 /****************************************************************
  *                                                              *

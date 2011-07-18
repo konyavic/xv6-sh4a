@@ -15,42 +15,38 @@ exec(char *path, char **argv)
   for(tmp=argv; *tmp != 0; ++tmp) {
     cprintf("%s: argv[%d]=%s\n", __func__, tmp-argv, *tmp);
   }
-  while(1);
 #endif
-  char *s, *last;
+#ifdef DEBUG
+  cprintf("%s: oldpgdir=0x%x\n", __func__, proc->pgdir);
+  dump_pde(proc->pgdir, 0, 2);
+#endif
+  char *mem, *s, *last;
   int i, argc, arglen, len, off;
-  uint sz, spbottom, argp, esp;
-  char *sp;
+  uint sz, sp, spbottom, argp;
   struct elfhdr elf;
   struct inode *ip;
   struct proghdr ph;
-  pde_t *pgdir, *oldpgdir,*mem;
-  char *eargv[20];
+  pde_t *pgdir, *oldpgdir;
 
   pgdir = 0;
   sz = 0;
-  memset(eargv, 0, sizeof(eargv));
-  for (i=0; argv[i]; i++)
-  {
-	len = strlen(argv[i]);	
-	eargv[i] = argv[i];
-	memmove(eargv[i], argv[i], len);
-  }
-  
-  //**eargv = **argv;
-  //*eargv = *argv;
 
   if((ip = namei(path)) == 0)
     return -1;
   ilock(ip);
+
   // Check ELF header
   if(readi(ip, (char*)&elf, 0, sizeof(elf)) < sizeof(elf))
     goto bad;
   if(elf.magic != ELF_MAGIC)
     goto bad;
-  if(!(pgdir = kalloc()))
+
+  if(!(pgdir = setupkvm()))
     goto bad;
 
+#ifdef DEBUG
+  cprintf("%s: start of loading\n", __func__);
+#endif
   // Load program into memory.
   for(i=0, off=elf.phoff; i<elf.phnum; i++, off+=sizeof(ph)){
     if(readi(ip, (char*)&ph, off, sizeof(ph)) != sizeof(ph))
@@ -65,110 +61,76 @@ exec(char *path, char **argv)
       goto bad;
   }
   iunlockput(ip);
+#ifdef DEBUG
+  cprintf("%s: end of loading\n", __func__);
+#endif
+
   // Allocate and initialize stack at sz
   sz = spbottom = PGROUNDUP(sz);
-  //if(!(sz = allocuvm(pgdir, sz, sz + PGSIZE)))
-  //  goto bad;
-  //mem = uva2ka(pgdir, (char *)spbottom);
-  //proc->kstack = stkalloc();
-  //proc->kstack = mem;
-  //sp=0;
-  sp = proc->kstack + PGSIZE - 4;
-  //XXX: mappages(pgdir, PADDR(proc->kstack) , PGSIZE, PADDR(proc->kstack), PTEL_DEFAULT);
-  arglen = 0;
-  for(argc=0; eargv[argc]; argc++)
-    {
-   arglen += strlen(*argv) + 1;
-  }
-  arglen = (arglen+3) & ~3;
-//arglen += strlen(*eargv) + 1;
-  //for(argc=0; argv[argc]; argc++)
-    //{
-   //arglen += strlen(argv[argc]) + 1;
- // }
-  //arglen = (arglen+3) & ~3;
-  
-  //sp = sz;
-  //sp = proc->tf->r7_rank;
-//  argp = sp - arglen - 100;
-  //mem = sp - 80;
-    //memset(eargv, 0, sizeof(eargv));
-  //for(i=0;; i++){
-    //if(i >= NELEM(eargv))
-      //return -1;
-  //if (argv[i] != 0)
-  //{
-  //*mem = argv[i];
-  //sp = sp + 1;}
-  //else{
-  //*mem = 0;
-  //break;
- // }
-//}
-  sp -= sizeof *proc->tf;
-  //proc->tf = (struct trapframe*)sp;
-  
-  // Set up new context to start executing at forkret,
-  // which returns to trapret (see below).
-  sp -= 4;
-  //*(uint*)sp = (uint)trapret;
+  if(!(sz = allocuvm(pgdir, sz, sz + PGSIZE)))
+    goto bad;
+  mem = uva2ka(pgdir, (char *)spbottom);
+#ifdef DEBUG
+  cprintf("%s: allocated user stack\n", __func__);
+  dump_pgd(pgdir, 2);
+#endif
 
-   sp -= sizeof *proc->context;
-   //proc->context = (struct context*)sp;
-   argp = sp - arglen - 2048;
-   //argp= argp + 1;
-  memset(argp, 0, 1024);
-  sp-=1024;
-  // argp = sp − arglen − 4*(argc+1);
+  arglen = 0;
+  for(argc=0; argv[argc]; argc++)
+    arglen += strlen(argv[argc]) + 1;
+  arglen = (arglen+3) & ~3;
+
+  sp = sz;
+  argp = sz - arglen - 4*(argc+1);
+
   // Copy argv strings and pointers to stack.
-  //*(uint*)(argp+4*argc) = 0;  // argv[argc]
+  *(uint*)(mem+argp-spbottom + 4*argc) = 0;  // argv[argc]
   for(i=argc-1; i>=0; i--){
-    len = strlen(eargv[i]) + 1;
+    len = strlen(argv[i]) + 1;
     sp -= len;
-    memmove(sp, eargv[i], len);
-    *(uint*)(argp + 4*i) = sp;  // argv[i]
+    memmove(mem+sp-spbottom, argv[i], len);
+    *(uint*)(mem+argp-spbottom + 4*i) = sp;  // argv[i]
   }
-  //len = strlen(*argv+1) + 1;
-  //sp -= len;
-  //memmove(sp, *argv+1, len);
-  //*(uint*)(argp + 4) = sp;
-  //len = strlen(*argv) + 1;
-  
-  //sp -= len;
-  //memmove(sp, *argv, len); 
-  //*(uint*)argp = sp;
-  
-  ktf->r5 = argp;
-  ktf->r4 = argc;
+
   // Stack frame for main(argc, argv), below arguments.
-  //sp = argp;
-  //sp -= 4;
-  //*(uint*)(mem+sp-spbottom) = argp;
-  //sp -= 4;
-  //*(uint*)(mem+sp-spbottom) = argc;
-  //sp -= 4;
-  //*(uint*)(mem+sp-spbottom) = 0xffffffff;   // fake return pc
+#if 0
+  sp = argp;
+  sp -= 4;
+  *(uint*)(mem+sp-spbottom) = argp;
+  sp -= 4;
+  *(uint*)(mem+sp-spbottom) = argc;
+  sp -= 4;
+  *(uint*)(mem+sp-spbottom) = 0xffffffff;   // fake return pc
+#else
+  asm volatile("ldc %0, r4_bank" :: "r"(argp));
+  asm volatile("ldc %0, r5_bank" :: "r"(argc));
+#endif
 
   // Save program name for debugging.
   for(last=s=path; *s; s++)
     if(*s == '/')
       last = s+1;
   safestrcpy(proc->name, last, sizeof(proc->name));
+
   // Commit to the user image.
   oldpgdir = proc->pgdir;
-    //sp -= sizeof *p->context;
-  //proc->kstack = mem;
-  //p->context = (struct context*)sp;
-  //memset(p->context, 0, sizeof *p->context);
   proc->pgdir = pgdir;
   proc->sz = sz;
-  proc->tf->spc = elf.entry;  // main
-  ktf->spc = elf.entry;
-  //proc->context->r15 = sp;
-  //proc->tf->r7_rank = argp -4;
+#if 0
+  proc->tf->eip = elf.entry;  // main
+  proc->tf->esp = sp;
+#else
+  proc->tf->spc = elf.entry;
+  proc->tf->sgr = sp;
+#endif
+
+  switchuvm(proc); 
+
   freevm(oldpgdir);
-  switchuvm(proc);
-  //swtch_stack(proc->context->r15); 
+
+#ifdef DEBUG
+  cprintf("%s: finish\n", __func__);
+#endif
   return 0;
 
  bad:

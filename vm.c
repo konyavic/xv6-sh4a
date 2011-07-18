@@ -6,7 +6,7 @@
 #include "proc.h"
 #include "elf.h"
 
-#define USERTOP  0x3600000
+#define USERTOP  0x80000000
 
 static pde_t *kpgdir;  // for use in scheduler()
 extern struct cpu *bcpu;
@@ -63,9 +63,6 @@ walkpgdir(pde_t *pgdir, const void *va, int create)
   pte_t *pgtab;
 
   pde = &pgdir[PDX(va)];
-#ifdef DEBUG
-  cprintf("%s: va=0x%x pde addr=0x%x val=%x\n", __func__, va, pde, *pde);
-#endif
   if(*pde & PTEL_V){
     pgtab = (pte_t*) PTE_ADDR(*pde);
   } else if(!create || !(r = (uint) kalloc()))
@@ -233,7 +230,7 @@ switchuvm(struct proc *p)
 char*
 uva2ka(pde_t *pgdir, char *uva)
 {    
-  pte_t *pte = &pgdir[PTX(uva)];
+  pte_t *pte = walkpgdir(pgdir, uva, 0);
   if(pte == 0) return 0;
   uint pa = PTE_ADDR(*pte);
   return (char *)pa;
@@ -266,7 +263,7 @@ loaduvm(pde_t *pgdir, char *addr, struct inode *ip, uint offset, uint sz)
   if((uint)addr % PGSIZE != 0)
     panic("loaduvm: addr must be page aligned\n");
   for(i = 0; i < sz; i += PGSIZE){
-    if(!(pte = &pgdir[PTX(addr+i)]))
+    if(!(pte = walkpgdir(pgdir, addr+i, 0)))
       panic("loaduvm: address should exist\n");
     pa = PTE_ADDR(*pte);
     if(sz - i < PGSIZE) n = sz - i;
@@ -291,6 +288,7 @@ allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
   for (; a <= last; a += PGSIZE){
     char *mem = kalloc();
     if(mem == 0){
+      cprintf("allocuvm out of memory\n");
       deallocuvm(pgdir, newsz, oldsz);
       return 0;
     }
@@ -310,7 +308,7 @@ deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
   char *a = (char *)PGROUNDUP(newsz);
   char *last = PGROUNDDOWN(oldsz - 1);
   for(; a <= last; a += PGSIZE){
-    pte_t *pte = &pgdir[PTX(a)];
+    pte_t *pte = walkpgdir(pgdir, a, 0);
     if(pte && (*pte & PTEL_V) != 0){
       uint pa = PTE_ADDR(*pte);
       if(pa == 0)
@@ -327,14 +325,24 @@ deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
 void
 freevm(pde_t *pgdir)
 {
+#ifdef DEBUG
+  cprintf("%s:\n", __func__);
+#endif
   uint i;
   if(!pgdir)
     panic("freevm: no pgdir");
-  //deallocuvm(pgdir, USERTOP, 0);
+  deallocuvm(pgdir, USERTOP, 0);  // XXX: heavy
   for(i = 0; i < NPDENTRIES; i++){
-    if(pgdir[i] & PTEL_V)
+    if(pgdir[i] & PTEL_V) {
+#ifdef DEBUG
+      cprintf("%s: free page addr=0x%x\n", __func__, PTE_ADDR(pgdir[i]));
+#endif
       kfree((void *) PTE_ADDR(pgdir[i]));
+    }
   }
+#ifdef DEBUG
+  cprintf("%s: free pgdir=0x%x\n", __func__, pgdir);
+#endif
   kfree((void *) pgdir);
 }
 
@@ -449,7 +457,7 @@ void dump_mem(unsigned char *addr, int size, int level)
   cprintf("%s--- %s start ---\n", head, __func__);
   int i;
   int skip = 0;
-  for (i = 0; i < PGSIZE/16; i += 16) {
+  for (i = 0; i < PGSIZE; i += 16) {
     if (i != 0 
         && addr[i] == addr[i-16]
         && addr[i+1] == addr[i-15]

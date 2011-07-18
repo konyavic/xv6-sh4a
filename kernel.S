@@ -323,5 +323,18 @@ tlb_tmp_stack:
  ****************************************************************/
 .balign 512, 0, 512
 intr_entry:
+  mov #8, r5
+  mov.l intr_debug_str, r4
+  mov.l intr_cprintf, r1
+  jsr @r1
+  nop
   bra intr_entry
   nop
+
+.align 4
+intr_EXPEVT: 
+  .long 0xff000024
+intr_cprintf:
+  .long cprintf
+intr_debug_str:
+  .long debug_str

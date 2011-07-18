@@ -313,6 +313,9 @@ scheduler(void)
   for(;;){
     // Enable interrupts on this processor.
     sti();
+#ifdef DEBUGxxx
+    cprintf("%s: sr=0x%x\n", __func__, read_sr());
+#endif
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
@@ -365,7 +368,7 @@ sched(void)
     panic("sched locks");
   if(proc->state == RUNNING)
     panic("sched running");
-  if(read_sr()&FL_IF)
+  if(!(read_sr()&FL_IF))
     panic("sched interruptible");
   intena = cpu->intena;
   swtch(&proc->context, cpu->scheduler);

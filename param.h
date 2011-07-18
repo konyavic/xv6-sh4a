@@ -11,8 +11,8 @@
 #define EXPEVT 0xff000024
 #define INTEVT 0xff000028
 
-#define SR_BL_ENABLE    0x10000000
-#define SR_BL_DISABLE   0xefffffff
+#define SR_BL_DISABLE   0x10000000
+#define SR_BL_ENABLE    0xefffffff
 #define SR_MDRBBL_MASK  0x70000000
 #define SR_IMASK_MASK   0x000000f0
 #define SR_IMASK_CLEAR  0xffffff0f
@@ -20,7 +20,7 @@
 
 #define kernel_prel  0x40000000
 #define proc_prel    0xbfffffff
-#define FL_IF        0x10000000      // Interrupt Enable
+#define FL_IF        0x10000000      // Interrupt Disable
 
 #define P1_START  0x80000000    // kernel stack off
 

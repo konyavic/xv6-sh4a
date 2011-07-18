@@ -21,7 +21,7 @@ load_sr(uint val)
       );
 }
 
-static inline void sti(void)
+static inline void cli(void)
 {
   unsigned long __srval;
   asm volatile(
@@ -29,12 +29,12 @@ static inline void sti(void)
       "or    %1,%0\n\t"
       "ldc   %0,sr\n\t"
       :"+&z"(__srval)
-      :"r"(SR_BL_ENABLE)
+      :"r"(SR_BL_DISABLE)
       );
 
 }
 
-static inline void cli(void)
+static inline void sti(void)
 {
   unsigned long __srval;
   asm volatile(
@@ -42,7 +42,7 @@ static inline void cli(void)
       "and   %1,%0\n\t"
       "ldc   %0,sr\n\t"
       :"+&z"(__srval)
-      :"r"(SR_BL_DISABLE)
+      :"r"(SR_BL_ENABLE)
       );
 }
 

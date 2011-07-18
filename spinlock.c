@@ -103,13 +103,13 @@ pushcli(void)
   eflags = read_sr();
   cli();
   if(cpu->ncli++ == 0)
-    cpu->intena = eflags & FL_IF;
+    cpu->intena = eflags | FL_IF;
 }
 
 void
 popcli(void)
 {
-  if(read_sr()&FL_IF)
+  if(!(read_sr()&FL_IF))
     panic("popcli - interruptible");
   if(--cpu->ncli < 0)
     panic("popcli");

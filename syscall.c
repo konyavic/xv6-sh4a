@@ -160,12 +160,7 @@ syscall(void)
 {
   int num = *((int *)TRA) >> 2;
 #ifdef DEBUG
-  uint r4_bank, r5_bank;
   cprintf("%s: tra=%d\n", __func__, num);
-  asm volatile("stc r4_bank, %0" : "=r"(r4_bank));
-  asm volatile("stc r5_bank, %0" : "=r"(r5_bank));
-  cprintf("%s: r4_bank=0x%x, \"%s\"\n", __func__, r4_bank, r4_bank);
-  cprintf("%s: r5_bank=0x%x\n", __func__, r5_bank);
 #endif
   if(num >= 0 && num < NELEM(syscalls) && syscalls[num])
     // XXX: should use proc->context->r0 ?

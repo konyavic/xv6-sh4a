@@ -102,6 +102,7 @@ exec(char *path, char **argv)
   sp -= 4;
   *(uint*)(mem+sp-spbottom) = 0xffffffff;   // fake return pc
 #else
+  sp = argp;
   asm volatile("ldc %0, r4_bank" :: "r"(argp));
   asm volatile("ldc %0, r5_bank" :: "r"(argc));
 #endif
@@ -122,6 +123,10 @@ exec(char *path, char **argv)
 #else
   proc->tf->spc = elf.entry;
   proc->tf->sgr = sp;
+#ifdef DEBUG
+  cprintf("%s: spc=0x%x, sgr=0x%x\n", 
+      __func__, proc->tf->spc, proc->tf->sgr);
+#endif
 #endif
 
   switchuvm(proc); 

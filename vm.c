@@ -201,12 +201,12 @@ switchuvm(struct proc *p)
   //disable_mmu();
   clear_tlb();
 
+#if 0
   // XXX: load tlb for process stack
   pte_t *pte = PTE_ADDR(p->pgdir[0]); // initcode
   uint addr = PTE_ADDR(pte[0]);
   uint perm = PTE_PERM(pte[0]);
 
-#if 1
   set_pteh(0x00000000);
   set_ptel(addr|perm);
   //set_urc();
@@ -376,6 +376,18 @@ copyuvm(pde_t *pgdir, uint sz)
 bad:
   freevm(d);
   return 0;
+}
+
+void tlb_register(uint va) 
+{
+  pte_t *pte = walkpgdir(proc->pgdir, va, 0);
+  uint pa = PTE_ADDR(*pte);
+  uint perm = PTE_PERM(*pte);
+  set_pteh(PTE_ADDR(va));
+  set_ptel(pa|perm);
+  cprintf("%s: PTEH=0x%x PTEL=0x%x\n", __func__, 
+      *(uint *)PTEH, *(uint *)PTEL);
+  ldtlb();
 }
 
 char dump_head[] = "        ";

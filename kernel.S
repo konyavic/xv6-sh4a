@@ -153,7 +153,9 @@ excp_no_change:
   lds.l @r15+, macl
   lds.l @r15+, pr
   /* return */
-  stc sgr, r15
+  ! stc sgr, r15
+  add #-20, r15
+  mov.l @r15, r15
   rte
   nop
 
@@ -191,152 +193,118 @@ excp_STACK_SIZE:
  ****************************************************************/
 .balign 1024, 0, 1024
 tlb_exception:
+  /*
+   * user stack   -> kernel stack
+   */
+  /* current stack = r15 = proc->kstack + KSTACKSIZE */
+  mov.l tlb_tmp_stack, r15
+  mov.l r2, @-r15
+  mov.l r1, @-r15
+  mov.l tlb_proc, r1
+  mov.l @r1, r1
+  mov.l @(8,r1), r1 ! XXX: better way to locate proc->kstack?
+  mov.l tlb_STACK_SIZE, r2
+  add   r2, r1
+  mov   r15, r2     ! r2 = old stack
+  mov   r1, r15     ! r15 = new stack
+  mov.l @r2+, r1
+  mov.l @r2+, r2
+  /* save trapframe */
+  sts.l	pr,   @-r15
+  sts.l macl, @-r15
+  sts.l mach, @-r15
+  stc.l gbr,  @-r15
+  stc.l sgr,  @-r15
+  stc.l ssr,  @-r15
+  stc.l spc,  @-r15
+  mov.l r14,  @-r15
+  mov.l r13,  @-r15
+  mov.l r12,  @-r15
+  mov.l r11,  @-r15
+  mov.l r10,  @-r15
+  mov.l r9,   @-r15
+  mov.l r8,   @-r15
+  mov.l r7,   @-r15
+  mov.l r6,   @-r15
+  mov.l r5,   @-r15
+  mov.l r4,   @-r15
+  mov.l r3,   @-r15
+  mov.l r2,   @-r15
+  mov.l r1,   @-r15
+  mov.l r0,   @-r15
+  /* save EXPEVT */
+  mov.l tlb_EXPEVT, r4
+  mov.l @r4, r4
+  /* XXX: enable intr */
+
+  /* call the service routine */
+  mov.l tlb_vect_table, r1
+  shlr2 r4
+  shlr  r4
+  add   r4, r1  ! r1 = vect_table + EXPEVT >> 2
+  mov.l @r1, r1
+  jsr   @r1
+  nop
+
+  /* restore trapframe */
+  mov.l @r15+, r0
+  mov.l @r15+, r1
+  mov.l @r15+, r2
+  mov.l @r15+, r3
+  mov.l @r15+, r4
+  mov.l @r15+, r5
+  mov.l @r15+, r6
+  mov.l @r15+, r7
+  mov.l @r15+, r8
+  mov.l @r15+, r9
+  mov.l @r15+, r10
+  mov.l @r15+, r11
+  mov.l @r15+, r12
+  mov.l @r15+, r13
+  mov.l @r15+, r14
+  ldc.l @r15+, spc
+  ldc.l @r15+, ssr
+  ! ldc.l @r15+, sgr  ! forbidden
+  add   #4, r15
+  ldc.l @r15+, gbr
+  lds.l @r15+, mach
+  lds.l @r15+, macl
+  lds.l @r15+, pr
+  /* return */
+  ! stc sgr, r15
+  add #-20, r15
+  mov.l @r15, r15
+  rte
+  nop
+
+#ifdef DEBUG
+    mov r15, r5
+    mov.l tlb_debug_str, r4
+    mov.l tlb_cprintf, r1
+    jsr @r1
+    nop
 debug_loop_tlb:
     bra debug_loop_tlb
     nop
-
-mov.l 4f, r3				
-!stc  ssr, r0
-!shll r0
-!shll r0
-!bt/s 1f
-mov   r15, r7
-mov  r15, r0
-shll r0
-bt/s 1f
-nop
-nop
-mov.l 9f, r0
-mov.l @r0, r15
-
-1:	mov #-1, r4
-mov.l 2f, r1
-mov.l r7, @-r15
-mov.l r4, @-r15
-sts.l   macl, @-r15
-sts.l 	mach, @-r15
-stc.l	gbr, @-r15        
-stc.l   ssr,@-r15
-sts.l	pr, @-r15               ! save ssr
-stc.l   spc,@-r15               ! save spc
-lds	r3, pr        
-!mov.l	r0, @-r15
-mov.l	r14, @-r15
-mov.l	r13, @-r15
-mov.l	r12, @-r15
-mov.l	r11, @-r15
-mov.l	r10, @-r15
-mov.l	r9, @-r15
-mov.l	r8, @-r15
-
-stc 	sr, r8
-or	r1, r8
-mov.l	3f, r1
-and	r1, r8
-ldc	r8, sr
-
-mov.l	r7, @-r15
-mov.l	r6, @-r15
-mov.l	r5, @-r15
-mov.l	r4, @-r15
-mov.l	r3, @-r15
-mov.l	r2, @-r15
-mov.l	r1, @-r15
-mov.l	r0, @-r15
-//mov.l   13f, r10
-//mov.l	r15, @r10
-
-
-mov.l  10f, r8
-mov.l  @r8, r8
-shlr2  r8
-shlr   r8
-mov.l  8f, r9
-add    r8, r9
-mov.l  @r9, r9
-! set exception code
-jmp @r9
-nop
-nop
-.align	4
-.global __tlb_term
-__tlb_term:
-mov.l	@r15+, r0
-mov.l	@r15+, r1
-mov.l	@r15+, r2
-mov.l	@r15+, r3
-mov.l	@r15+, r4
-mov.l	@r15+, r5
-mov.l	@r15+, r6
-mov.l	@r15+, r7
-
-stc	sr, r8
-mov.l 	5f, r9
-or	r9, r8
-ldc	r8, sr
-
-mov.l	@r15+, r8
-mov.l	@r15+, r9
-mov.l	@r15+, r10
-mov.l	@r15+, r11
-mov.l	@r15+, r12
-mov.l	@r15+, r13
-mov.l	@r15+, r14
-!mov.l	@r15+, r4
-ldc.l	@r15+, spc
-lds.l	@r15+, pr
-mov.l	@r15+, r3
-ldc.l 	@r15+, gbr
-lds.l	@r15+, mach
-lds.l	@r15+, macl
-add	#4, r15
-mov.l	@r15+, r7
-mov	r3, r2
-mov.l	7f, r1
-and	r1, r2
-
-//mov	r3, r1
-//shlr2	r1
-//mov	#0x3c, r3
-//and	r3, r1
-//cmp/eq	r3, r1
-//bt/s	6f
-//mov	r6, r1
-
-//6:	or	r1, r2
-ldc	r2, ssr
-!mov.l	@r15+, r2
-!mov	r4, r15
-!com/eq  r
-!mov.l   12f, r0
-mov   	r7, r15
-rte					! return
-nop
+#endif
 
 .align 4
-
-2: .long 0x000000f0 !INTEVT
-3: .long 0xcfffffff !IMASKclr
-4: .long __tlb_term
-5: .long 0x30000000 !MDRBBLset
-
-7: 
-__tlb_IMASK:
-.long 0xffffff0f!_INT_Vectors
-8: .long vect_table
-9: .long skstack
-10: .long 0xff000024
-11:  .long 0x80000000
-12:  .long -0x80000000
-13:  .long ktf
-
-
 tlb_EXPEVT: 
   .long 0xff000024
 tlb_cprintf:
   .long cprintf
 tlb_debug_str:
   .long debug_str
+tlb_SR_MD:
+  .long 0x40000000
+tlb_proc:
+  .long proc
+tlb_vect_table:
+  .long vect_table
+tlb_STACK_SIZE:
+  .long KSTACKSIZE
+tlb_tmp_stack:
+  .long xv6_stack + STACK_SIZE
 
 
 /****************************************************************

@@ -130,6 +130,8 @@
 #define PTE_ADDR(pte)	((uint) (pte) & ~0xFFF)
 #define PTE_PERM(pte)	((uint) (pte) & 0x1FF)
 
+void tlb_register(uint);
+
 inline static void enable_mmu()
 {
     uint * mmucr = (uint *)MMUCR;

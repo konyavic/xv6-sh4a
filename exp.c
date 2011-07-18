@@ -7,140 +7,27 @@
 #include "elf.h"
 //#include "tmu.h"
 
-
-
-//static void (* const vect_table[])(void);
-uint i = 0;
-//void exphandl(void)
-//{
-//uint  _INT_Vectors;
-//   uint  expno;
-//   uint *expevt = (uint *)EXPEVT;
-//   expno = *expevt; 
-//   (vect_table[expno >> 5])();
-// __tlb_term();
-//}
-//void reserve(void);
-tlbmissR()
+void tlbmissR()
 {
-  uint tlbtable[64][3];
+  uint va = *(uint *)TEA;
+  tlb_register(va);
+  return;
+}
 
-  //tlbtable[0][0]= 0x0;
-  //tlbtable[0][1]= 0xff001b4;
-  //tlbtable[0][2]= 0x0;
-  //tlbtable[1][0]= 0x0c1fec00;
-  //tlbtable[1][1]= proc->pgdir[PTX(0x0c1fec00)];
-  //tlbtable[1][2]= 0x0;
-  //set_pteh(tlbtable[1][0]);
-  //print_pteh();
-  //set_ptel(tlbtable[1][1]);
-  //print_ptel();
-  //set_ptea(tlbtable[1][2]);
-  //print_ptea();
-  //ldtlb();
-  uint * tea = (uint *) TEA;
-  tlbtable[0][0]= *tea & 0xfffffc00;
-  tlbtable[0][1]= intpgdir[PTX(*tea)];  // XXX: search in page table
-  tlbtable[0][2]= 0x0;
-  set_pteh(tlbtable[0][0]);
-  print_pteh();
-  set_ptel(tlbtable[0][1]);
-  print_ptel();
-  set_ptea(tlbtable[0][2]);
-
-  set_urc(i);
-  i++;
-  if (i == 64)
-    i = 1;
-
-  ldtlb();
+void tlbmissW()
+{
+  uint va = *(uint *)TEA;
+  tlb_register(va);
   return;
 }
 
 
-PowerON_Reset(){;}                                                                                                                   
-
-
-Manual_Reset(){;} 
-
-TBL_Reset(){;}                                                                                                                      
-
-
-
-
-tlbmissW(){
-  uint tlbtable[64][3];
-
-  //tlbtable[0][0]= 0x0;
-  //tlbtable[0][1]= 0xff001b4;
-  //tlbtable[0][2]= 0x0;
-  //tlbtable[1][0]= 0x0c1fec00;
-  //tlbtable[1][1]= proc->pgdir[PTX(0x0c1fec00)];
-  //tlbtable[1][2]= 0x0;
-  //set_pteh(tlbtable[1][0]);
-  //print_pteh();
-  //set_ptel(tlbtable[1][1]);
-  //print_ptel();
-  //set_ptea(tlbtable[1][2]);
-  //print_ptea();
-  //ldtlb();
-  uint * tea = (uint *) TEA;
-  tlbtable[0][0]= *tea & 0xfffffc00;
-
-  tlbtable[0][1]= intpgdir[PTX(*tea)];
-  tlbtable[0][2]= 0x0;
-  set_pteh(tlbtable[0][0]);
-  print_pteh();
-  set_ptel(tlbtable[0][1]);
-  print_ptel();
-  set_ptea(tlbtable[0][2]);
-
-  set_urc(i);
-  i++;
-  if (i == 64)
-    i = 1;
-
-  ldtlb();
-  return;
-}
-
-
-firstpagewrite(){;}
-tlbprotecterrorR(){;}
-
-tlbprotecterrorW(){uint tlbtable[64][3];
-
-  //tlbtable[0][0]= 0x0;
-  //tlbtable[0][1]= 0xff001b4;
-  //tlbtable[0][2]= 0x0;
-  //tlbtable[1][0]= 0x0c1fec00;
-  //tlbtable[1][1]= proc->pgdir[PTX(0x0c1fec00)];
-  //tlbtable[1][2]= 0x0;
-  //set_pteh(tlbtable[1][0]);
-  //print_pteh();
-  //set_ptel(tlbtable[1][1]);
-  //print_ptel();
-  //set_ptea(tlbtable[1][2]);
-  //print_ptea();
-  //ldtlb();
-  uint * tea = (uint *) TEA;
-  tlbtable[0][0]= *tea & 0xfffffc00;
-  tlbtable[0][1]= intpgdir[PTX(*tea)];
-  tlbtable[0][2]= 0x0;
-  set_pteh(tlbtable[0][0]);
-  print_pteh();
-  set_ptel(tlbtable[0][1]);
-  print_ptel();
-  set_ptea(tlbtable[0][2]);
-
-  set_urc(i);
-  i++;
-  if (i = 64)
-    i = 1;
-
-  ldtlb();
-  return;
-}
+void PowerON_Reset(){;}
+void Manual_Reset(){;} 
+void TBL_Reset(){;}
+void firstpagewrite(){;}
+void tlbprotecterrorR(){;}
+void tlbprotecterrorW(){;}
 
 void addresserrorR(){;}
 void addresserrorW(){;}
@@ -174,7 +61,7 @@ void tuni0(){;}
 void tuni1(){;}
 void tuni2(){;}
 void tuni3(){;}
-void tuni4(void)
+void tuni4()
 {
   tmu_mask();
   if(cpu->id == 0){
@@ -222,23 +109,13 @@ void fpudisable(){;}	//0x800 FPU disable
 void slotfpudisable(){;}	//0x820 slot FPU disable
 void trapa0(){;}	
 
-//                 INT_Input_Capture(){;}
-
-//                 INT_RTC_ATI(){;}
-
-//                 INT_RTC_PRI(){;}
-
-//                 INT_RTC_CUI(){;}
-
-//                 INT_SCI_ERI(){;}
-
-//                INT_SCI_RXI(){;}
-
-//                INT_SCI_TXI(){;}
-
-//                 INT_SCI_TEI(){;}
-
-//                 INT_WDT(){;}
-
-//                 INT_REF_RCMI(){;}
-
+//INT_Input_Capture(){;}
+//INT_RTC_ATI(){;}
+//INT_RTC_PRI(){;}
+//INT_RTC_CUI(){;}
+//INT_SCI_ERI(){;}
+//INT_SCI_RXI(){;}
+//INT_SCI_TXI(){;}
+//INT_SCI_TEI(){;}
+//INT_WDT(){;}
+//INT_REF_RCMI(){;}

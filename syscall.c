@@ -159,7 +159,6 @@ syscall(void)
       __func__, num, proc->tf->spc);
 #endif
   if(num >= 0 && num < NELEM(syscalls) && syscalls[num])
-    // XXX: should use proc->context->r0 ?
     ret = syscalls[num]();
   else {
     cprintf("%d %s: unknown sys call %d\n",

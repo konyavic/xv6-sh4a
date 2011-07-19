@@ -11,7 +11,6 @@ sys_fork(void)
   return fork();
 }
 
-
 int
 sys_exit(void)
 {
@@ -26,18 +25,13 @@ sys_wait(void)
 }
 
 int
-sys_kill(int pid)
+sys_kill()
 {
-  //int pid;
-  //switchkvm();
-  if(pid < 0)
-    {
-    switchuvm(proc);
+  int pid;
+
+  if(argint(0, &pid) < 0)
     return -1;
-        }
-  kill(pid);
-  //switchuvm(proc);
-  return;
+  return kill(pid);
 }
 
 int
@@ -60,9 +54,12 @@ sys_sbrk(void)
   return addr;
 }
 
+#include "defs.h"
+
 int
 sys_sleep(uint n)
 {
+  cprintf("%s: not working yet\n", __func__);
   //int n;
   uint ticks0;
   //switchkvm();
@@ -92,6 +89,7 @@ sys_sleep(uint n)
 int
 sys_uptime(void)
 {
+  cprintf("%s: not working yet\n", __func__);
   uint xticks;
   //switchkvm();
   acquire(&tickslock);

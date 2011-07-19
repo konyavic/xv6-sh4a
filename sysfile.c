@@ -256,41 +256,22 @@ create(char *path, short type, short major, short minor)
 int
 sys_open(void)
 {
-#ifdef DEBUG
-  cprintf("%s:\n", __func__);
-#endif
   char *path;
   int fd, omode;
   struct file *f;
   struct inode *ip;
 
-  if(argstr(0, &path) < 0 || argint(1, &omode) < 0) {
-#ifdef DEBUG
-    cprintf("%s: agrstr=0x%x argint=0x%x error\n", __func__, argstr(0, &path), argint(1, &omode));
-    while(1);
-#endif
+  if(argstr(0, &path) < 0 || argint(1, &omode) < 0)
     return -1;
-  }
   if(omode & O_CREATE){
-    if((ip = create(path, T_FILE, 0, 0)) == 0) {
-#ifdef DEBUG
-      cprintf("%s: create error\n", __func__);
-#endif
+    if((ip = create(path, T_FILE, 0, 0)) == 0)
       return -1;
-    }
   } else {
-    if((ip = namei(path)) == 0) {
-#ifdef DEBUG
-      cprintf("%s: namei error\n", __func__);
-#endif
+    if((ip = namei(path)) == 0)
       return -1;
-    }
     ilock(ip);
     if(ip->type == T_DIR && omode != O_RDONLY){
       iunlockput(ip);
-#ifdef DEBUG
-      cprintf("%s: type & omode error\n", __func__);
-#endif
       return -1;
     }
   }
@@ -299,9 +280,6 @@ sys_open(void)
     if(f)
       fileclose(f);
     iunlockput(ip);
-#ifdef DEBUG
-    cprintf("%s: alloc error\n", __func__);
-#endif
     return -1;
   }
   iunlock(ip);

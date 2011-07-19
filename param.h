@@ -22,8 +22,6 @@
 #define proc_prel    0xbfffffff
 #define FL_IF        0x10000000      // Interrupt Disable
 
-#define P1_START  0x80000000    // kernel stack off
-
 #define STACK_SIZE  0x1000
 
 //#define PHYSTOP  0x8d000000 // use phys mem up to here as free pool

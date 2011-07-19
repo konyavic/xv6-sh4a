@@ -258,7 +258,5 @@ consoleinit(void)
   devsw[CONSOLE].write = consolewrite;
   devsw[CONSOLE].read = consoleread;
   cons.locking = 1;
-
-  // XXX: intr setting
 }
 

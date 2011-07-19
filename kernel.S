@@ -1,5 +1,3 @@
-.include	"vect.inc"
-.include	"syscall.h"
 #include    "param.h"
 
 .section .start, "ax"

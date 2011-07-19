@@ -470,13 +470,12 @@ dirlookup(struct inode *dp, char *name, uint *poff)
 
   if(dp->type != T_DIR)
     panic("dirlookup not DIR");
-  
+
   for(off = 0; off < dp->size; off += BSIZE){
     bp = bread(dp->dev, bmap(dp, off / BSIZE));
     for(de = (struct dirent*)bp->data;
         de < (struct dirent*)(bp->data + BSIZE);
         de++){
-      
       if(de->inum == 0)
         continue;
       if(namecmp(name, de->name) == 0){

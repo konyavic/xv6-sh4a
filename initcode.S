@@ -2,39 +2,29 @@
 
 #include "syscall.h"
 
+# exec(init, argv)
 .global start
 start:
-	mov.l 4f, r4
-	mov.l 6f, r5
+	mov.l 1f, r4
+	mov.l 2f, r5
 	TRAPA #SYS_exec
   nop
+
+# should not reach here
+3:
+  bra 3b
   nop
-         
-  mov.l 1f, r7
-100:
-   bra 100b
-   nop
-.align 4
-1: .long 0x12345678
-2: arg1:
-.long     0x100000
-3: .long 0xf0
-# for(;;) exit();
-#exit:
-#  movl $SYS_exit, %eax
-#  int $T_SYSCALL
-#  jmp exit
 
 # char init[] = "/init\0";
-4: .long init
+1: 
+  .long init
 init:
   .string "/init\0"
 
+.align 4
 # char *argv[] = { init, 0 };
-.align 2
-6: 
+2: 
   .long argv
 argv:
   .long init
   .long 0
-

@@ -4,7 +4,6 @@
 #include "fs.h"
 #include "fcntl.h"
 #include "syscall.h"
-#include "traps.h"
 
 char buf[2048];
 char name[3];

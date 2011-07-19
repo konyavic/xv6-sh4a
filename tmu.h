@@ -1,6 +1,3 @@
-//#include <spumone/spumone.h>
-
-
 #define REGB(x) (*((volatile unsigned char *)(x)))
 #define REGS(x) (*((volatile unsigned short *)(x)))
 #define REGI(x) (*((volatile unsigned int *)(x)))

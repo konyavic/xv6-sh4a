@@ -76,7 +76,6 @@ mkfs: mkfs.c fs.h
 
 UPROGS=\
 	_cat\
-	_test\
 	_echo\
 	_forktest\
 	_grep\
@@ -87,6 +86,7 @@ UPROGS=\
 	_mkdir\
 	_rm\
 	_sh\
+	_stressfs\
 	_usertests\
 	_wc\
 	_zombie\

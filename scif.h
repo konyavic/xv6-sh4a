@@ -20,9 +20,9 @@ extern void scif_init(void);
 #define SCFSR       REGS(SCIF_BASE + 0x10) /* Serial Status Register             ? */
 #define SCFRDR      REGB(SCIF_BASE + 0x14) /* Fifo Receive Data Register         ? */
 #define SCFCR       REGS(SCIF_BASE + 0x18) /* Fifo Control Register                */
-//#define SCFDR       REGS(SCIF_BASE + 0x1C) /* Fifo Data-count Register             */
-#define SCSPTR      REGS(SCIF_BASE + 0x1C) /* Serial PorT Register                 */
-//#define SCLSR       REGS(SCIF_BASE + 0x24) /* Line Status Register                 */
+#define SCFDR       REGS(SCIF_BASE + 0x1C) /* Fifo Data-count Register             */
+#define SCSPTR      REGS(SCIF_BASE + 0x20) /* Serial PorT Register                 */
+#define SCLSR       REGS(SCIF_BASE + 0x24) /* Line Status Register                 */
 
 /* SCSMR bit masks */
 #define SMR_CKS         0x0003 /* ClocK Select       */

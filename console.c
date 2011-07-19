@@ -161,8 +161,7 @@ consoleintr(int (*getc)(void))
   int c;
 
   acquire(&input.lock);
-  if ((c = getc()) >= 0){
-  //while((c = getc()) >= 0){
+  while((c = getc()) >= 0){
     switch(c){
     case C('P'):  // Process listing.
       procdump();

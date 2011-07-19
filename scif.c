@@ -33,19 +33,21 @@ unsigned char scif_putc(unsigned char c)
 scif1_get(void)
 {
   unsigned char c;
+  unsigned int s;
+  s = SCFDR & 0xFF;
+  if (!s)
+    return -1;
+
   c = SCFRDR;
   //cprintf("%c\n",c);
-  SCFSR &= ~(FSR_RDF | FSR_DR);
+  //SCFSR &= ~(FSR_RDF | FSR_DR);
   return c;
 }
 void do_scif1_read(void)
 {
-#ifdef DEBUG
-  cprintf("%s:\n", __func__);
-#endif
   consoleintr(scif1_get);
+  SCFSR &= ~(FSR_RDF | FSR_DR);
   return;
-
 }
 
 int putc(int c)

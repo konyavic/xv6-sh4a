@@ -117,7 +117,12 @@ excp_no_change:
   /* save EXPEVT */
   mov.l excp_EXPEVT, r4
   mov.l @r4, r4
-  /* XXX: enable intr */
+
+  /* enable intr */
+  stc   sr, r1
+  mov.l excp_SR_BL_ENABLE, r2
+  and   r1, r2
+  ldc   r2, sr
 
   /* call the service routine */
   mov.l excp_vect_table, r1
@@ -127,6 +132,12 @@ excp_no_change:
   mov.l @r1, r1
   jsr   @r1
   nop
+
+  /* disable intr */
+  stc   sr, r1
+  mov.l excp_SR_BL_DISABLE, r2
+  or   r1, r2
+  ldc   r2, sr
 
   /* restore trapframe */
 .global trapret
@@ -188,6 +199,10 @@ excp_debug_str:
   .long debug_str
 excp_SR_MD:
   .long 0x40000000
+excp_SR_BL_ENABLE:
+  .long 0xefffffff
+excp_SR_BL_DISABLE:
+  .long 0x10000000
 excp_proc:
   .long proc
 excp_vect_table:
@@ -323,18 +338,108 @@ tlb_tmp_stack:
  ****************************************************************/
 .balign 512, 0, 512
 intr_entry:
-  mov #8, r5
-  mov.l intr_debug_str, r4
-  mov.l intr_cprintf, r1
-  jsr @r1
+  /*
+   * kernel stack -> kernel stack (no change)
+   * user stack   -> kernel stack (change)
+   */
+  stc     ssr, r15
+  shll    r15
+  shll    r15
+  bt/s    intr_no_change  ! SR.MD == 1 ?
+  stc     sgr, r15
+  /* current stack = r15 = proc->kstack + KSTACKSIZE */
+  mov.l r2, @-r15
+  mov.l r1, @-r15
+  mov.l intr_proc, r1
+  mov.l @r1, r1
+  mov.l @(8,r1), r1 ! XXX: better way to locate proc->kstack?
+  mov.l intr_STACK_SIZE, r2
+  add   r2, r1
+  mov   r15, r2     ! r2 = old stack
+  mov   r1, r15     ! r15 = new stack
+  mov.l @r2+, r1
+  mov.l @r2+, r2
+intr_no_change:
+  /* save trapframe */
+  sts.l	pr,   @-r15
+  sts.l macl, @-r15
+  sts.l mach, @-r15
+  stc.l gbr,  @-r15
+  stc.l sgr,  @-r15
+  stc.l ssr,  @-r15
+  stc.l spc,  @-r15
+  mov.l r14,  @-r15
+  mov.l r13,  @-r15
+  mov.l r12,  @-r15
+  mov.l r11,  @-r15
+  mov.l r10,  @-r15
+  mov.l r9,   @-r15
+  mov.l r8,   @-r15
+  mov.l r7,   @-r15
+  mov.l r6,   @-r15
+  mov.l r5,   @-r15
+  mov.l r4,   @-r15
+  mov.l r3,   @-r15
+  mov.l r2,   @-r15
+  mov.l r1,   @-r15
+  mov.l r0,   @-r15
+  /* save EXPEVT */
+  mov.l intr_INTEVT, r4
+  mov.l @r4, r4
+  /* XXX: enbale intr */
+  
+  /* call the service routine */
+  mov.l intr_vect_table, r1
+  shlr2 r4
+  shlr  r4
+  add   r4, r1    ! r1 = vect_table + INTEVT >> 2
+  mov.l @r1, r1
+  jsr   @r1
   nop
-  bra intr_entry
+
+  /* restore trapframe */
+  mov.l @r15+, r0
+  mov.l @r15+, r1
+  mov.l @r15+, r2
+  mov.l @r15+, r3
+  mov.l @r15+, r4
+  mov.l @r15+, r5
+  mov.l @r15+, r6
+  mov.l @r15+, r7
+  mov.l @r15+, r8
+  mov.l @r15+, r9
+  mov.l @r15+, r10
+  mov.l @r15+, r11
+  mov.l @r15+, r12
+  mov.l @r15+, r13
+  mov.l @r15+, r14
+  ldc.l @r15+, spc
+  ldc.l @r15+, ssr
+  ! ldc.l @r15+, sgr  ! forbidden
+  add   #4, r15
+  ldc.l @r15+, gbr
+  lds.l @r15+, mach
+  lds.l @r15+, macl
+  lds.l @r15+, pr
+  /* return */
+  ! stc sgr, r15
+  add #-20, r15
+  mov.l @r15, r15
+  rte
   nop
 
 .align 4
-intr_EXPEVT: 
-  .long 0xff000024
+intr_INTEVT: 
+  .long 0xff000028
 intr_cprintf:
   .long cprintf
 intr_debug_str:
   .long debug_str
+intr_SR_MD:
+  .long 0x40000000
+intr_proc:
+  .long proc
+intr_vect_table:
+  .long vect_table
+intr_STACK_SIZE:
+  .long KSTACKSIZE

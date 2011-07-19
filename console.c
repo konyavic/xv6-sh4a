@@ -156,12 +156,13 @@ struct {
 #define C(x)  ((x)-'@')  // Control-x
 
 void
-consoleintr(int c)
+consoleintr(int (*getc)(void))
 {
-  //int c;
+  int c;
 
   acquire(&input.lock);
-  //while((c = scif1_get()) >= 0){
+  if ((c = getc()) >= 0){
+  //while((c = getc()) >= 0){
     switch(c){
     case C('P'):  // Process listing.
       procdump();
@@ -191,7 +192,7 @@ consoleintr(int c)
       }
       break;
     }
-  //}
+  }
   release(&input.lock);
 }
 

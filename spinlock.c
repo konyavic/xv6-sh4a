@@ -74,6 +74,7 @@ getcallerpcs(void *v, uint pcs[])
   
   ebp = (uint*)v - 2;
   for(i = 0; i < 10; i++){
+    // XXX
     if(ebp == 0 || ebp < (uint *) 0x0c000000 || ebp > (uint*)0x0c200000)
       break;
     pcs[i] = ebp[1];     // saved %eip

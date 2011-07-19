@@ -146,7 +146,6 @@ main(void)
 {
   static char buf[100];
   int fd;
-  int pid;
   
   // Assumes three file descriptors open.
   while((fd = open("console", O_RDWR)) >= 0){
@@ -166,11 +165,7 @@ main(void)
         printf(2, "cannot cd %s\n", buf+3);
       continue;
     }
-  pid = fork();
-  if(pid == -1)
-    panic("fork");
-    if(pid == 0)
-    //if(fork1() == 0)
+    if(fork1() == 0)
       runcmd(parsecmd(buf));
     wait();
   }

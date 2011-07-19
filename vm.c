@@ -10,38 +10,9 @@
 
 static pde_t *kpgdir;  // for use in scheduler()
 extern struct cpu *bcpu;
-pde_t *intpgdir;
+
 // Set up CPU's kernel segment descriptors.
 // Run once at boot time on each CPU.
-void tlbinit()
-{
-uint tlbtable[64][3];
-//tlbtable[0][0]= 0x0;
-//tlbtable[0][1]= 0xff001b4;
-//tlbtable[0][2]= 0x0;
-tlbtable[1][0]= 0x0c1fec00;
-tlbtable[1][1]= proc->pgdir[PTX(0x0c1fec00)];
-tlbtable[1][2]= 0x0;
-set_pteh(tlbtable[1][0]);
-print_pteh();
-set_ptel(tlbtable[1][1]);
-print_ptel();
-set_ptea(tlbtable[1][2]);
-//print_ptea();
-ldtlb();
-//tlbtable[0][0]= 0x0;
-//tlbtable[0][1]= proc->pgdir[0];
-//tlbtable[0][2]= 0x0;
-//set_pteh(tlbtable[0][0]);
-//print_pteh();
-//set_ptel(tlbtable[0][1]);
-//print_ptel();
-//set_ptea(tlbtable[0][2]);
-//set_urc(1);
-//ldtlb();
-//return;
-}
-
 void
 ksegment(void)
 {
@@ -94,13 +65,7 @@ mappages(pde_t *pgdir, void *la, uint size, uint pa, int perm)
       return 0;
     if(*pte & PTEL_V)
       panic("remap");
-#ifdef DEBUG
-    cprintf("%s: before: pte addr=0x%x val=%x\n", __func__, pte, *pte);
-#endif
     *pte = pa | perm | PTEL_V;
-#ifdef DEBUG
-    cprintf("%s: after: pte addr=0x%x val=%x\n", __func__, pte, *pte);
-#endif
     if(a == last)
       break;
     a += PGSIZE;

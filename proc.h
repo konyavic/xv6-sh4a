@@ -21,19 +21,9 @@ struct cpu {
   struct proc *proc;
 };
 
-struct context *new_context, *old_context;
-struct trapframe *ktf;
-struct trapframe *etf;
-uint *midtf;
 struct cpu cpus[1];
 struct cpu *bcpu;
 char *kstack;
-extern pde_t *intpgdir;
-extern uint *midtf;
-//char firfs[10] = "/init\0";
-//extern char inits[];
-
-//extern int ncpu;
 
 // Per-CPU variables, holding pointers to the
 // current cpu and to the current process.

@@ -140,11 +140,6 @@ userinit(void)
   p->cwd = namei("/");
 
   p->state = RUNNABLE;
-
-#ifdef DEBUG
-  cprintf("%s:\n", __func__);
-  dump_proc(p);
-#endif
 }
 
 // Grow current process's memory by n bytes.
@@ -457,8 +452,12 @@ wakeup1(void *chan)
   struct proc *p;
 
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
-    if(p->state == SLEEPING && p->chan == chan)
+    if(p->state == SLEEPING && p->chan == chan) {
+#ifdef DEBUG
+      cprintf("%s: wakeup pid=%d\n", __func__, p->pid);
+#endif
       p->state = RUNNABLE;
+    }
 }
 
 // Wake up all processes sleeping on chan.
@@ -540,22 +539,14 @@ void dump_context(struct context *cx)
       cx->r13,
       cx->r14,
       cx->r15);
-#if 0
-  cprintf("sr: 0x%x pc: 0x%x\n",
-      cx->sr,
-      cx->pc);
-  cprintf("ssr: 0x%x spc: 0x%x sgr: 0x%x\n",
+  cprintf("ssr: 0x%x spc: 0x%x\n",
       cx->ssr,
-      cx->spc,
-      cx->sgr);
+      cx->spc);
   cprintf("gbr: 0x%x mach: 0x%x macl: 0x%x pr: 0x%x\n",
       cx->gbr,
       cx->mach,
       cx->macl,
       cx->pr);
-  cprintf("dbr: 0x%x\n",
-      cx->dbr);
-#endif
   cprintf("r0: 0x%x r1: 0x%x r2: 0x%x r3: 0x%x\n",
       cx->r0_bank,
       cx->r1_bank,

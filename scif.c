@@ -13,7 +13,8 @@ void scif_init(void)
 
   SCBRR = SCIF_BPS_115200; /* set baudrate to 115200bps */
 
-  SCFCR = FCR_TTRG_1 | FCR_RTRG_1;
+  //SCFCR = FCR_TTRG_1 | FCR_RTRG_1;
+  SCFCR = 0;
   IPRC_SCIF1(0xa);
 
   SCSCR = SCR_RIE | SCR_TE | SCR_RE; /* enable transmit */
@@ -39,9 +40,10 @@ scif1_get(void)
 }
 void do_scif1_read(void)
 {
-  int c;
-  c = scif1_get();
-  consoleintr(c);
+#ifdef DEBUG
+  cprintf("%s:\n", __func__);
+#endif
+  consoleintr(scif1_get);
   return;
 
 }

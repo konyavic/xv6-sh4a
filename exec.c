@@ -16,7 +16,7 @@ exec(char *path, char **argv)
     cprintf("%s: argv[%d]=%s\n", __func__, tmp-argv, *tmp);
   }
 #endif
-#ifdef DEBUG
+#ifdef DEBUGxxx
   cprintf("%s: oldpgdir=0x%x\n", __func__, proc->pgdir);
   dump_pde(proc->pgdir, 0, 2);
 #endif
@@ -70,7 +70,7 @@ exec(char *path, char **argv)
   if(!(sz = allocuvm(pgdir, sz, sz + PGSIZE)))
     goto bad;
   mem = uva2ka(pgdir, (char *)spbottom);
-#ifdef DEBUG
+#ifdef DEBUGxxx
   cprintf("%s: allocated user stack\n", __func__);
   dump_pgd(pgdir, 2);
 #endif

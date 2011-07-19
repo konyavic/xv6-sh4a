@@ -47,20 +47,16 @@ sys_getpid(void)
 }
 
 int
-sys_sbrk(uint n)
+sys_sbrk(void)
 {
   int addr;
-  //int n;
-  //switchkvm();
-  if(n < 0)
-    {  return -1;
-    }
-    addr = proc->sz;
+  int n;
+
+  if(argint(0, &n) < 0)
+    return -1;
+  addr = proc->sz;
   if(growproc(n) < 0)
-    {  return -1;
-    }
-    //addr = proc->sz;
-  //switchuvm(proc);  
+    return -1;
   return addr;
 }
 

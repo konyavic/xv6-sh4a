@@ -10,14 +10,14 @@
 void tlbmissR()
 {
   uint va = *(uint *)TEA;
-  tlb_register(va);
+  //tlb_register(va);
   return;
 }
 
 void tlbmissW()
 {
   uint va = *(uint *)TEA;
-  tlb_register(va);
+  //tlb_register(va);
   return;
 }
 
@@ -29,7 +29,11 @@ void firstpagewrite(){;}
 void tlbprotecterrorR(){;}
 void tlbprotecterrorW(){;}
 
-void addresserrorR(){;}
+void addresserrorR()
+{
+  cprintf("%s:\n", __func__);
+  while(1);
+}
 void addresserrorW(){;}
 void fpuexception(){;}
 void tlbdoulblehit(){;}

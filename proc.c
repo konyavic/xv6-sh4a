@@ -101,7 +101,7 @@ found:
   sp -= sizeof *p->context;
   p->context = (struct context*)sp;
   memset(p->context, 0, sizeof *p->context);
-  p->context->sr = 0x40000000;
+  p->context->sr = 0x70000000;
   p->context->pr = (uint)forkret;
   p->context->r15 = p->tf;
   p->context->r14 = p->kstack + KSTACKSIZE;
@@ -156,7 +156,7 @@ growproc(int n)
       return -1;
   }
   proc->sz = sz;
-  //switchuvm(proc);
+  switchuvm(proc);
   return 0;
 }
 

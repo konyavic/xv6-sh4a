@@ -118,11 +118,13 @@ excp_no_change:
   mov.l excp_EXPEVT, r4
   mov.l @r4, r4
 
+#if 0
   /* enable intr */
   stc   sr, r1
   mov.l excp_SR_BL_ENABLE, r2
   and   r1, r2
   ldc   r2, sr
+#endif
 
   /* call the service routine */
   mov.l excp_vect_table, r1
@@ -133,11 +135,13 @@ excp_no_change:
   jsr   @r1
   nop
 
+#if 0
   /* disable intr */
   stc   sr, r1
   mov.l excp_SR_BL_DISABLE, r2
   or   r1, r2
   ldc   r2, sr
+#endif
 
   /* restore trapframe */
 .global trapret

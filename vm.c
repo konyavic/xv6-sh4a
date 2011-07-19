@@ -178,6 +178,18 @@ switchuvm(struct proc *p)
   cprintf("%s: PTEH=0x%x PTEL=0x%x\n", __func__, *(uint *)PTEH, *(uint *)PTEL);
   ldtlb();
 #endif
+  // an ad-hoc loader
+  uint va;
+  pde_t *pte;
+  int i;
+  for (
+      va = 0, i = 0; 
+      ((pte = walkpgdir(proc->pgdir, va, 0)) != 0) && *pte != 0
+      ; va += PGSIZE, i = (i+1)%64
+      ) {
+    set_urc(i);
+    tlb_register(va);
+  }
   
   //enable_mmu();
   
@@ -350,8 +362,10 @@ void tlb_register(uint va)
   uint perm = PTE_PERM(*pte);
   set_pteh(PTE_ADDR(va));
   set_ptel(pa|perm);
+#ifdef DEBUG
   cprintf("%s: va=0x%x PTEH=0x%x PTEL=0x%x\n", __func__, 
       va, *(uint *)PTEH, *(uint *)PTEL);
+#endif
   ldtlb();
 }
 

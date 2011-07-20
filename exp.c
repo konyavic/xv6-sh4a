@@ -5,7 +5,7 @@
 #include "mmu.h"
 #include "proc.h"
 #include "elf.h"
-//#include "tmu.h"
+#include "tmu.h"
 
 void tlbmissR()
 {
@@ -67,20 +67,23 @@ void ir11(){;}
 
 //ir10(){;}
 
-void tuni0(){;}
+void tuni4()
+{
+}
+
 void tuni1(){;}
 void tuni2(){;}
 void tuni3(){;}
-void tuni4()
+
+void tuni0()
 {
-  tmu_mask();
+  TCR &= ~TCR_UNF_BIT;
   if(cpu->id == 0){
     acquire(&tickslock);
     ticks++;
     wakeup(&ticks);
     release(&tickslock);
   }
-  tmu_clr();
   if(proc && proc->killed)
     exit();
 
@@ -94,7 +97,8 @@ void tuni4()
     exit();
 
   return;
-}	//0x460 TUNI3
+}
+
 void ati(){;}		//0x480 RTC ATI
 void pri(){;}		//0x4a0 PRI
 void cui(){;}		//0x4c0 CUI

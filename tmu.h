@@ -54,13 +54,15 @@
 
 
 /* Default Value for ch-5 */
-#define TMU_BASE        TMU_BASE_345
-#define TMU_OFFSET      TMU_OFFSET5
+//#define TMU_BASE        TMU_BASE_345
+#define TMU_BASE        TMU_BASE_012
+//#define TMU_OFFSET      TMU_OFFSET5
+#define TMU_OFFSET      TMU_OFFSET0
 
 #define TSTR        REGB(TMU_BASE + 0x04) /* Timer start register */
 #define TCOR        REGI(TMU_BASE + TMU_OFFSET + TCOR_OFFSET) /* Timer constant register */
-#define TCNT        REGI(TMU_BASE + TMU_OFFSET  + TCNT_OFFSET) /* Timer counter */
-#define TCR         REGS(TMU_BASE + TMU_OFFSET  + TCR_OFFSET) /* Timer control register */
+#define TCNT        REGI(TMU_BASE + TMU_OFFSET + TCNT_OFFSET) /* Timer counter */
+#define TCR         REGS(TMU_BASE + TMU_OFFSET + TCR_OFFSET) /* Timer control register */
 
 
 /* bit definitions */
@@ -110,36 +112,21 @@
 
 /* Interrupt Level */
 #define TINTLVL        0xd
-#define IPRA    REGI(0xffd40000)
-//#define IPRO    REGI(0xffd40004)
-#define	IPRB	REGI(0xffd40004)
+#define IPRA  REGS(0xffd00004)
+#define	IPRB	REGS(0xffd00008)
 
-
-#define IPRA_TMU0(n) (IPRA = ((IPRA & 0x00ffffff) | (n << 24)))
-#define IPRA_TMU1(n) (IPRA = ((IPRA & 0xff00ffff) | (n << 16)))
-#define IPRA_TMU2(n) (IPRA = ((IPRA & 0xffff00ff) | (n << 8)))
-#define IPRA_TMU3(n) (IPRO = ((IPRO & 0x00ffffff) | (n << 24)))//(IPRB = ((IPRB & 0xffffffff) | (n << 4)))
-#define IPRA_TMU4(n) (IPRO = ((IPRO & 0xff00ffff) | (n << 16)))//(IPRB = ((IPRB & 0xff00ffff) | (n )))
-#define IPRA_TMU5(n) (IPRB = ((IPRB & 0xffff00ff) | (n << 8)))
+#define IPRA_TMU0(n) (IPRA = ((IPRA & 0x0fff) | (n << 12)))
+#define IPRA_TMU1(n) (IPRA = ((IPRA & 0xf0ff) | (n << 8)))
+#define IPRA_TMU2(n) *IPRA = ((IPRA & 0xff0f) | (n << 4)))
 
 /* Interrupt Mask */
-#define IMSKC   REGI(0xfed40080)
-#define IMSK    REGI(0xfed40084)
+#define IMSKC   REGI(0xfe080060)
+#define IMSK    REGI(0xfe080040)
 #define IMSK_TMU012 0x00000001
 #define IMSK_TMU345 0x00000002
 //#define INTORG_TMUCH345_BIT	1
 
 /* for ch-5 */
-#define IMSK_TMU    IMSK_TMU345
+#define IMSK_TMU    IMSK_TMU012
 
 
-//spm_vcpu *tmu_interval(spm_intr_id iid);
-void tmu_mask(void)
-{
-    IMSK |= IMSK_TMU;
-}
-
-void tmu_clr(void)
-{
- IMSKC |= IMSK_TMU;
-}

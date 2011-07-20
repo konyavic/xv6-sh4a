@@ -57,30 +57,24 @@ sys_sbrk(void)
 #include "defs.h"
 
 int
-sys_sleep(uint n)
+sys_sleep(void)
 {
   cprintf("%s: not working yet\n", __func__);
-  //int n;
+  int n;
   uint ticks0;
-  //switchkvm();
-  if(n < 0)
-    {  //switchuvm(proc);
+  
+  if(argint(0, &n) < 0)
     return -1;
-    }
   acquire(&tickslock);
   ticks0 = ticks;
   while(ticks - ticks0 < n){
     if(proc->killed){
       release(&tickslock);
-      {  //switchuvm(proc);
-    return -1;
-    }
+      return -1;
     }
     sleep(&ticks, &tickslock);
   }
-
   release(&tickslock);
-    //switchuvm(proc);
   return 0;
 }
 
@@ -91,10 +85,9 @@ sys_uptime(void)
 {
   cprintf("%s: not working yet\n", __func__);
   uint xticks;
-  //switchkvm();
+  
   acquire(&tickslock);
   xticks = ticks;
   release(&tickslock);
-  //switchuvm(proc);
   return xticks;
 }

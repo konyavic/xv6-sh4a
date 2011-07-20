@@ -1441,8 +1441,8 @@ main(int argc, char *argv[])
 
   //mem();
   pipe1();
-  //preempt();
-  //exitwait();
+  preempt();
+  exitwait();
 
   rmdot();
   fourteen();

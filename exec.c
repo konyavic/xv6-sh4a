@@ -103,8 +103,10 @@ exec(char *path, char **argv)
   *(uint*)(mem+sp-spbottom) = 0xffffffff;   // fake return pc
 #else
   sp = argp;
+  uint fakeret = 0xffffffff;
   asm volatile("ldc %0, r4_bank" :: "r"(argc));
   asm volatile("ldc %0, r5_bank" :: "r"(argp));
+  asm volatile("lds %0, pr" :: "r"(fakeret));  // fake return pc
 #endif
 
   // Save program name for debugging.

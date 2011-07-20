@@ -39,8 +39,6 @@ scif1_get(void)
     return -1;
 
   c = SCFRDR;
-  //cprintf("%c\n",c);
-  //SCFSR &= ~(FSR_RDF | FSR_DR);
   return c;
 }
 void do_scif1_read(void)

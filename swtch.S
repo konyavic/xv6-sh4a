@@ -21,7 +21,7 @@ swtch:
   /* callee-save */
   ! mov.l r14, @-r15
   ! sts.l pr, @-r15
-  ! add #-4, r15
+  ! add -<total sum of local varibles' size>, r15
   ! mov r15, r14
 
   /* start of store */
@@ -106,35 +106,9 @@ swtch:
   /* end of load */
 
   /* return */
-  ! add #4, r14
+  ! add <total sum of local varibles' size>, r14
   ! mov r14, r15
   ! lds.l @r15+, pr
   ! mov.l @r15+, r14
   rts
   nop
-  ! rte
-  ! nop
-
-.global sys_call_table
-sys_call_table:
-.long sys_fork	/* 0  -  old "setup()" system call*/
-.long sys_exit
-.long sys_wait
-.long sys_pipe
-.long sys_write
-.long sys_read		/* 5 */
-.long sys_close
-.long sys_kill
-.long sys_exec
-.long sys_open
-.long sys_mknod		/* 10 */
-.long sys_unlink
-.long sys_fstat
-.long sys_link
-.long sys_mkdir
-.long sys_chdir		/* 15 */
-.long sys_dup
-.long sys_getpid	/* old break syscall holder */
-.long sys_sbrk
-.long sys_sleep
-.long sys_uptime		/* 20 */

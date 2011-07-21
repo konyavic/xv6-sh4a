@@ -45,27 +45,3 @@ static inline void sti(void)
       :"r"(SR_BL_ENABLE)
       );
 }
-
-static inline void set_proc_prel(void)
-{
-  unsigned long __srval;
-  asm volatile(
-      "stc  sr,%0\n\t"
-      "and   %1,%0\n\t"
-      "ldc   %0,sr\n\t"
-      :"+&z"(__srval)
-      :"r"(proc_prel)
-      );
-}
-
-static inline void set_kerenl_prel(void)
-{
-  unsigned long __srval;
-  asm volatile(
-      "stc  sr,%0\n\t"
-      "or   %1,%0\n\t"
-      "ldc   %0,sr\n\t"
-      :"+&z"(__srval)
-      :"r"(kernel_prel)
-      );
-}

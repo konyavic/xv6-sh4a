@@ -13,14 +13,11 @@
 
 #define SR_BL_DISABLE   0x10000000
 #define SR_BL_ENABLE    0xefffffff
+#define SR_BL_MASK      0x10000000
 #define SR_MDRBBL_MASK  0x70000000
 #define SR_IMASK_MASK   0x000000f0
 #define SR_IMASK_CLEAR  0xffffff0f
 #define SR_RB_MASK		0x20000000
-
-#define kernel_prel  0x40000000
-#define proc_prel    0xbfffffff
-#define FL_IF        0x10000000      // Interrupt Disable
 
 #define STACK_SIZE  0x1000
 

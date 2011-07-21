@@ -19,7 +19,9 @@ tvinit(void)
 }
 
 void
-trap(void)
+trap()
 {
+  cprintf("unexpected trap\n");
+  while(1);
   return;
 }

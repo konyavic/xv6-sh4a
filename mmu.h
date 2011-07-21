@@ -1,56 +1,12 @@
-//void xv_mmu_init();
-//static void print_ttb();
 /* registers */
 #define PTEH 0xff000000  // page-table entry high
 #define PTEL 0xff000004  // page-table entry low
 #define TTB  0xff000008  // transfer-table base
 #define TEA  0xff00000c  // TLB exception address
 #define MMUCR 0xff000010 // MMU control register
-//#define PASCR 0xff000070 // phisical-address-space control register
-//#define IRMCR 0xff000078 // instruction re-fetch control register
+#define PASCR 0xff000070 // phisical-address-space control register
+#define IRMCR 0xff000078 // instruction re-fetch control register
 #define PTEA  0xff000034 //Page table entry assistance register 
-
-
-//#define FL_CF           0x00000001      // Carry Flag
-//#define FL_PF           0x00000004      // Parity Flag
-//#define FL_AF           0x00000010      // Auxiliary carry Flag
-//#define FL_ZF           0x00000040      // Zero Flag
-//#define FL_SF           0x00000080      // Sign Flag
-//#define FL_TF           0x00000100      // Trap Flag
-//#define FL_IF           0x00000200      // Interrupt Enable
-//#define FL_DF           0x00000400      // Direction Flag
-//#define FL_OF           0x00000800      // Overflow Flag
-//#define FL_IOPL_MASK    0x00003000      // I/O Privilege Level bitmask
-//#define FL_IOPL_0       0x00000000      //   IOPL == 0
-//#define FL_IOPL_1       0x00001000      //   IOPL == 1
-//#define FL_IOPL_2       0x00002000      //   IOPL == 2
-//#define FL_IOPL_3       0x00003000      //   IOPL == 3
-//#define FL_NT           0x00004000      // Nested Task
-//#define FL_RF           0x00010000      // Resume Flag
-//#define FL_VM           0x00020000      // Virtual 8086 mode
-//#define FL_AC           0x00040000      // Alignment Check
-//#define FL_VIF          0x00080000      // Virtual Interrupt Flag
-//#define FL_VIP          0x00100000      // Virtual Interrupt Pending
-//#define FL_ID           0x00200000      // ID flag
-
-// Control Register flags
-//#define CR0_PE		0x00000001	// Protection Enable
-//#define CR0_MP		0x00000002	// Monitor coProcessor
-//#define CR0_EM		0x00000004	// Emulation
-//#define CR0_TS		0x00000008	// Task Switched
-//#define CR0_ET		0x00000010	// Extension Type
-//#define CR0_NE		0x00000020	// Numeric Errror
-//#define CR0_WP		0x00010000	// Write Protect
-//#define CR0_AM		0x00040000	// Alignment Mask
-//#define CR0_NW		0x20000000	// Not Writethrough
-//#define CR0_CD		0x40000000	// Cache Disable
-//#define CR0_PG		0x80000000	// Paging
-
-
-
-//#define DPL_USER    0x3     // User DPL
-
-
 
 // A linear address 'la' has a three-part structure as follows:
 //
@@ -87,6 +43,7 @@
 #define PGROUNDUP(sz)  (((sz)+PGSIZE-1) & ~(PGSIZE-1))
 #define PGROUNDDOWN(a) ((char*)((((unsigned int)(a)) & ~(PGSIZE-1))))
 
+// for SH-4A
 // PTEH
 // +-----------+--+----------+
 // | VPN 31:10 |xx| ASID 7:0 |
@@ -112,21 +69,9 @@
 #define PTEL_USER       0x040 /* PR1-bit : user space access allowed */
 #define PTEL_SZ1        0x080 /* SZ1-bit : Size of page (on SH-4) */
 #define PTEL_V          0x100 /* V-bit   : page is valid */
-
 #define PTEL_DEFAULT    ( PTEL_WT | PTEL_SZ0 | PTEL_RW | PTEL_USER | PTEL_V | PTEL_DIRTY )
 // XXX: why causing miltiple hit without dirty?
 
-//#define PTE_PWT  0x001	// Write-Through
-//#define PTE_D		0x004	// Dirty
-//#define PTE_P		0x100	// Present
-//#define PTE_W		0x020	// Writeable
-//#define PTE_U		0x040	// User
-//#define PTE_PCD		0xfffffff7	// Cache-Disable
-////#define PTE_A		0x020	// Accessed
-//#define PTE_PS		0x090	// Page Size
-////#define PTE_MBZ		0x180	// Bits must be zero
-
-// Address in page table or page directory entry
 #define PTE_ADDR(pte)	((uint) (pte) & ~0xFFF)
 #define PTE_PERM(pte)	((uint) (pte) & 0x1FF)
 

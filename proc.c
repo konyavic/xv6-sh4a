@@ -128,18 +128,8 @@ userinit(void)
   p->sz = PGSIZE;
   memset(p->tf, 0, sizeof(*p->tf));
 
-#if 0
-  p->tf->cs = (SEG_UCODE << 3) | DPL_USER;
-  p->tf->ds = (SEG_UDATA << 3) | DPL_USER;
-  p->tf->es = p->tf->ds;
-  p->tf->ss = p->tf->ds;
-  p->tf->eflags = FL_IF;
-  p->tf->esp = PGSIZE;
-  p->tf->eip = 0;  // beginning of initcode.S
-#else
   p->tf->sgr = PGSIZE;
   p->tf->spc = 0;  // beginning of initcode.S
-#endif
 
   safestrcpy(p->name, "initcode", sizeof(p->name));
   p->cwd = namei("/");
@@ -368,7 +358,7 @@ sched(void)
     panic("sched locks");
   if(proc->state == RUNNING)
     panic("sched running");
-  if(!(read_sr()&FL_IF))
+  if(!(read_sr() & SR_BL_MASK))
     panic("sched interruptible");
   intena = cpu->intena;
   swtch(&proc->context, cpu->scheduler);

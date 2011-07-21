@@ -101,18 +101,18 @@ holding(struct spinlock *lock)
 void
 pushcli(void)
 {
-  int eflags;
+  int sr;
   
-  eflags = read_sr();
+  sr = read_sr();
   cli();
   if(cpu->ncli++ == 0)
-    cpu->intena = eflags | FL_IF;
+    cpu->intena = sr | SR_BL_MASK;
 }
 
 void
 popcli(void)
 {
-  if(!(read_sr()&FL_IF))
+  if(!(read_sr() & SR_BL_MASK))
     panic("popcli - interruptible");
   if(--cpu->ncli < 0)
     panic("popcli");

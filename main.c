@@ -3,8 +3,8 @@
 #include "param.h"
 #include "mmu.h"
 #include "proc.h"
-#include "sh4a.h"
-
+#include "sh4.h"
+#include "timer.h"
 #include "scif.h"
 
 extern struct cpu *cpu;       // This cpu.
@@ -58,7 +58,7 @@ mainc(void)
   fileinit();      // file table
   iinit();         // inode cache
   ideinit();       // disk
-  tmu_init();      // uniprocessor timer
+  timer_init();    // uniprocessor timer
   userinit();      // first user process
 
   // Finish setting up this processor in mpmain.

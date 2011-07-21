@@ -1,11 +1,11 @@
 #include "param.h"
 #include "types.h"
 #include "defs.h"
-#include "sh4a.h"
+#include "sh4.h"
 #include "mmu.h"
 #include "proc.h"
 #include "elf.h"
-#include "tmu.h"
+#include "timer.h"
 
 void tlbmissR()
 {

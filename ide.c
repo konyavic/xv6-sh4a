@@ -5,8 +5,7 @@
 #include "param.h"
 #include "mmu.h"
 #include "proc.h"
-#include "sh4a.h"
-//#include "traps.h"
+#include "sh4.h"
 #include "spinlock.h"
 #include "buf.h"
 

@@ -1,6 +1,6 @@
-#include <tmu.h>
+#include <timer.h>
 
-void tmu_init(void)
+void timer_init(void)
 {
   /* stop count TCNTx (not change other TCNT)*/
   TSTR = (TSTR & ((~TSTR_STR_BIT0) & (TSTR_STR_MASK)));

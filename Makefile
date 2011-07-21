@@ -1,14 +1,15 @@
 
 # kernel should be placed at first or the order of sections will be wrong
 OBJS = \
-	kernel.o\
-	main.o\
+	entry.o\
 	bio.o\
+	console.o\
 	exec.o\
 	file.o\
 	fs.o\
 	ide.o\
 	kalloc.o\
+	main.o\
 	pipe.o\
 	proc.o\
 	spinlock.o\
@@ -17,13 +18,12 @@ OBJS = \
 	syscall.o\
 	sysfile.o\
 	sysproc.o\
-	tmu.o\
+	timer.o\
 	exp.o\
 	scif.o\
+	vectors.o\
 	vm.o\
 	trap.o\
-	console.o\
-	call.o\
 
 # Cross-compiling (e.g., on Mac OS X)
 # TOOLPREFIX = i386-jos-elf-
@@ -46,10 +46,12 @@ ASFLAGS =
 LDFLAGS += 
 LIB = $(shell $(CC) -print-libgcc-file-name)
 
-image: initcode $(OBJS) $(LIB) fs.img
+all: bootimg.bin
+
+bootimg.bin: initcode $(OBJS) $(LIB) fs.img
 	$(OBJCOPY) -I binary fs.img fs_img.o
-	$(LD) $(LDFLAGS) -T xv6.lds -o linkout $(OBJS) $(LIB) -b binary initcode fs.img 
-	$(OBJCOPY) -S -O binary linkout image
+	$(LD) $(LDFLAGS) -T sh4.ld -o bootimg $(OBJS) $(LIB) -b binary initcode fs.img 
+	$(OBJCOPY) -S -O binary bootimg bootimg.bin
 
 initcode: initcode.S
 	$(CC) $(CFLAGS) -I. -c initcode.S

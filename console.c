@@ -5,13 +5,12 @@
 #include "types.h"
 #include "defs.h"
 #include "param.h"
-//#include "traps.h"
 #include "spinlock.h"
 #include "fs.h"
 #include "file.h"
 #include "mmu.h"
 #include "proc.h"
-#include "sh4a.h"
+#include "sh4.h"
 
 #include <stdarg.h>
 

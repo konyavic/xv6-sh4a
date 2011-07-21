@@ -149,7 +149,7 @@ static int (*syscalls[])(void) = {
 };
 
 void
-syscall(void)
+do_syscall(void)
 {
   int num = *((int *)TRA) >> 2;
   int ret;

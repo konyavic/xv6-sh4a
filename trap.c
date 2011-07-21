@@ -15,8 +15,11 @@ uint ticks;
 void
 tvinit(void)
 {
-  
   initlock(&tickslock, "time");
 }
 
-
+void
+trap(void)
+{
+  return;
+}

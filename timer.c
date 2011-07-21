@@ -1,4 +1,11 @@
-#include <timer.h>
+#include "types.h"
+#include "defs.h"
+#include "param.h"
+#include "mmu.h"
+#include "sh4.h"
+#include "proc.h"
+#include "spinlock.h"
+#include "timer.h"
 
 void timer_init(void)
 {
@@ -30,4 +37,26 @@ void timer_init(void)
   TSTR = (TSTR & TSTR_STR_MASK) | TSTR_STR_BIT0;
 }
 
+void do_timer(void)
+{
+  TCR &= ~TCR_UNF_BIT;
+  if(cpu->id == 0){
+    acquire(&tickslock);
+    ticks++;
+    wakeup(&ticks);
+    release(&tickslock);
+  }
+  if(proc && proc->killed)
+    exit();
 
+  // Force process to give up CPU on clock tick.
+  // If interrupts were on while locks held, would need to check nlock.
+  if(proc && proc->state == RUNNING)
+    yield();
+
+  // Check if the process has been killed since we yielded
+  if(proc && proc->killed)
+    exit();
+
+  return;
+}

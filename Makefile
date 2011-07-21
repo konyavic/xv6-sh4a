@@ -19,7 +19,6 @@ OBJS = \
 	sysfile.o\
 	sysproc.o\
 	timer.o\
-	exp.o\
 	scif.o\
 	vectors.o\
 	vm.o\

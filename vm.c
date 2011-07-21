@@ -369,6 +369,13 @@ void tlb_register(uint va)
   ldtlb();
 }
 
+void do_tlb_miss()
+{
+  uint va = *(uint *)TEA;
+  //tlb_register(va);
+  return;
+}
+
 char dump_head[] = "        ";
 void dump_pde(pde_t *pde, int also_dump_mem, int level) 
 {

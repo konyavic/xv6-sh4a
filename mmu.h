@@ -130,268 +130,86 @@
 #define PTE_ADDR(pte)	((uint) (pte) & ~0xFFF)
 #define PTE_PERM(pte)	((uint) (pte) & 0x1FF)
 
-void tlb_register(uint);
-
 inline static void enable_mmu()
 {
-    uint * mmucr = (uint *)MMUCR;
-    *mmucr |= 0x00000001;
-    return;
+  uint * mmucr = (uint *)MMUCR;
+  *mmucr |= 0x00000001;
+  return;
 }
 
 inline static void disable_mmu()
 {
-    uint * mmucr = (uint *)MMUCR;
-    *mmucr &= 0xfffffffe;
-    return;
+  uint * mmucr = (uint *)MMUCR;
+  *mmucr &= 0xfffffffe;
+  return;
 }
 
 inline static void clear_tlb()
 {
-    uint * mmucr = (uint *)MMUCR;
-    *mmucr |= 0x00000004;
-    return;
+  uint * mmucr = (uint *)MMUCR;
+  *mmucr |= 0x00000004;
+  return;
 }
 
 inline static void set_urb(uint val)
 {
-    uint * mmucr = (uint *)MMUCR;
-    if(val >= 64)
-    {
-       val = 63;
-    }
-    val <<= 18;
-    val &= 0x00fc0000;
-    *mmucr &= 0xff03ffff;
-    *mmucr |= val;
-    return;
+  uint * mmucr = (uint *)MMUCR;
+  if(val >= 64)
+  {
+    val = 63;
+  }
+  val <<= 18;
+  val &= 0x00fc0000;
+  *mmucr &= 0xff03ffff;
+  *mmucr |= val;
+  return;
 
 }
 
 inline static void set_urc(uint val)
 {
-    uint * mmucr = (uint *)MMUCR;
-    if(val >= 64)
-    {
-        val = 63;
-    }
-    val <<= 10;
-    val &= 0x0000fc00;
-    *mmucr &= 0xffff03ff;
-    *mmucr |= val;
-    return;
-
-}
-
-
-inline static void print_pteh()
-{
-    uint * pteh = (uint *)PTEH;
-    return;
+  uint * mmucr = (uint *)MMUCR;
+  if(val >= 64)
+  {
+    val = 63;
+  }
+  val <<= 10;
+  val &= 0x0000fc00;
+  *mmucr &= 0xffff03ff;
+  *mmucr |= val;
+  return;
 }
 
 inline static void set_pteh(uint val)
 {
-    uint * pteh = (uint *)PTEH;
-    *pteh = (val & 0xffffffff);
-    return;
-}
-
-inline static void print_ptea()
-{
-    uint * ptea = (uint *)PTEA;
-    return;
+  uint * pteh = (uint *)PTEH;
+  *pteh = (val & 0xffffffff);
+  return;
 }
 
 inline static void set_ptea(uint val)
 {
-    uint * ptea = (uint *)PTEA;
-    *ptea = (val & 0xffffffff);
-    return;
+  uint * ptea = (uint *)PTEA;
+  *ptea = (val & 0xffffffff);
+  return;
 }
 
 inline static void set_ptel(uint val)
 {
-    uint * ptel = (uint *)PTEL;
-    *ptel = (val & 0xffffffff);
-    return;
-}
-
-inline static void print_ptel()
-{
-    uint * ptel = (uint *)PTEL;
-    return;
+  uint * ptel = (uint *)PTEL;
+  *ptel = (val & 0xffffffff);
+  return;
 }
 
 inline static void ldtlb()
 {
-    __asm__ __volatile__("ldtlb\n\t");
-    return;
+  asm volatile("ldtlb\n\t");
+  return;
 }
 
 inline static void set_ttb(uint val)
 {
-    uint * ttb = (uint *)TTB;
-    * ttb = val;
-    return;
+  uint * ttb = (uint *)TTB;
+  * ttb = val;
+  return;
 }
-
-inline static void print_ttb()
-{
-    uint * ttb = (uint *)TTB;
-    return;
-}
-
-//static void set_mmucr(uint val)
-//{
-//    uint * mmucr = (uint *)MMUCR;
-//    *mmucr = val;
-//    return;
-//}
-
-//static void set_pascr(uint val)
-//{
-//    uint * pascr = (uint *)PASCR;
-//    *pascr = val;
-//    return;
-//}
-
-//static void set_irmcr(uint val)
-//{
-//    uint * irmcr = (uint *)IRMCR;
-//   *irmcr = val;
-//   return;
-//}
-
-//static void ocbp(uint val)
-//{
-//    __asm__ __volatile__("mov %0,%1\n\t"
-//                         "ocbp @%1\n\t"
-//                     :"+z" (val)
-//                             :"r"  (0)
-//                            );
-//    return;
-//}
-
-//static void icbi(uint val)
-//{
-//    __asm__ __volatile__("mov %0,%1\n\t"
-//                         "icbi @%1\n\t"
-//                     :"+z" (val)
-//                             :"r"  (0)
-//                            );
-//    return;
-//}
-
-//void xv_mmu_init()
-//{
-//    clear_tlb();
-//    disable_mmu();
-//    set_urc(0);
-//    set_urb(0x3f);
-//    set_ttb(0x8c000000);
-//    print_ttb();
-//    enable_mmu();
-//    return;
-//}
-
-//static inline void sti(void)
-//{
-//    unsigned long __srval;
-//    __asm__ __volatile__("stc   sr,%0\n\t"
-//            "or    %1,%0\n\t"
-//           "ldc   %0,sr\n\t"
-//           :"+&z" (__srval)
-//          :"r"   (SR_BL_ENABLE)
-//          );
-
-//}
-
-//static inline void cli(void)
-//{
-//   unsigned long __srval;
-//   __asm__ __volatile__("stc  sr,%0\n\t"
-//            "and   %1,%0\n\t"
-//            "ldc   %0,sr\n\t"
-//            :"+&z" (__srval)
-//            :"r"   (SR_BL_DISABLE)
-//            );
-//}
-
-//static inline void set_proc_prel(void)
-//{
-//   unsigned long __srval;
-//   __asm__ __volatile__("stc  sr,%0\n\t"
-//            "and   %1,%0\n\t"
-//            "ldc   %0,sr\n\t"
-//            :"+&z" (__srval)
-//            :"r"   (proc_prel)
-//            );
-//}
-
-//static inline void set_kerenl_prel(void)
-//{
-//   unsigned long __srval;
-//   __asm__ __volatile__("stc  sr,%0\n\t"
-//            "or   %1,%0\n\t"
-//            "ldc   %0,sr\n\t"
-//            :"+&z" (__srval)
-//            :"r"   (kernel_prel)
-//            );
-//}
-
-inline static void set_val_in_p2(unsigned int addr, unsigned int val)
-{
-	unsigned int __tempval;
-	__asm__ __volatile__(
-		"mov.l 1f, %0\n\t"
-		"or %1, %0\n\t"
-		"jmp	@%0\n\t"
-		"nop\n\t"
-		".align 4\n"
-		"1: .long 2f\n"
-		"2:\n\t"
-
-		"mov.l 3f, %0\n\t"
-		//"synco\n\t"
-		//"ocbi @%0\n\t"
-		"nop\n"
-		"nop\n"
-		"nop\n"
-		"nop\n"
-		"nop\n"
-		"nop\n"
-		"nop\n"
-		"nop\n"
-		//"mov.l 6f, r3\n\t"
-		//"mov.l 5f, r1\n\t"
-		//"mov.l r1, @r0\n\t"
-		//"mov.l @r3, r3\n\t"
-		"mov.l %2, @%3\n\t "
-		//"and r2, r3\n\t"
-		//"mov.l r1, @r0\n\t"		
-		//"synco\n\t"
-		//"ocbi @r0\n\t"
-		"nop\n"
-		"nop\n"
-		"nop\n"
-		"nop\n"
-		"nop\n"
-		"nop\n"
-		"nop\n"
-		"nop\n"
-		"jmp @%0\n\t"
-		"nop\n"
-		".align 4\n"
-		"3: .long 4f\n"
-		//"5: .long 0xfffffe00\n"
-		//"6: .long 0xf2000000\n"
-		"4:"
-
-			: "=&r" (__tempval)
-			: "r"	(0x20000000), "r" (val), "r" (addr)
-		);
-return;
-}
-
-

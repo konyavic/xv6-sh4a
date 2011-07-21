@@ -1,8 +1,6 @@
 #define REGB(x) (*((volatile unsigned char *)(x)))
 #define REGS(x) (*((volatile unsigned short *)(x)))
 #define REGI(x) (*((volatile unsigned int *)(x)))
-extern unsigned char scif_putc(unsigned char c);
-extern void scif_init(void);
 /* 
  * Pck=33.333MHz
  * N = Pck / (32 * bps) * 10^6 - 1
@@ -98,3 +96,4 @@ extern void scif_init(void);
 
 #define IPRC_SCIF0(n) (IPRC = ((IPRC & 0x00ffffff) | (n << 24)))
 #define IPRC_SCIF1(n) (IPRC = ((IPRC & 0xffffff0f) | (n << 4)))
+

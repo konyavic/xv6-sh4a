@@ -1,13 +1,4 @@
-// Segments in proc->gdt.
-// Also known to bootasm.S and trapasm.S
-//#define SEG_KCODE 1  // kernel code
-//#define SEG_KDATA 2  // kernel data+stack
-//#define SEG_KCPU  3  // kernel per-cpu data
-//#define SEG_UCODE 4  // user code
-//#define SEG_UDATA 5  // user data+stack
-//#define SEG_TSS   6  // this process's task state
-//#define NSEGS     7
-//void ksegment(void);
+
 // Per-CPU state
 struct cpu {
   uchar id;                    // Local APIC ID; index into cpus[] below
@@ -15,7 +6,7 @@ struct cpu {
   volatile uint booted;        // Has the CPU started?
   int ncli;                    // Depth of pushcli nesting.
   int intena;                  // Were interrupts enabled before pushcli?
-  
+
   // Cpu-local storage variables; see below
   struct cpu *cpu;
   struct proc *proc;
@@ -47,80 +38,73 @@ struct proc *proc;     // Current proc on this cpu.
 // at the "Switch stacks" comment. Switch doesn't save eip explicitly,
 // but it is on the stack and allocproc() manipulates it.
 struct context {
-    /* general purpose registers (bank0) */
-    _reg_gp r0;
-    _reg_gp r1;
-    _reg_gp r2;
-    _reg_gp r3;
-    _reg_gp r4;
-    _reg_gp r5;
-    _reg_gp r6;
-    _reg_gp r7;
-    /* not-banked registers */
-    _reg_gp r8;
-    _reg_gp r9;
-    _reg_gp r10;
-    _reg_gp r11;
-    _reg_gp r12;
-    _reg_gp r13;
-    _reg_gp r14;
-    /* control registers */
-    _reg_gp ssr;
-    _reg_gp spc;
-    //_reg_gp sgr;
-    //_reg_vt dbr;
-    /* general purpose registers (bank1) */
-    _reg_gp r0_bank;
-    _reg_gp r1_bank;
-    _reg_gp r2_bank;
-    _reg_gp r3_bank;
-    _reg_gp r4_bank;
-    _reg_gp r5_bank;
-    _reg_gp r6_bank;
-    _reg_gp r7_bank;
-    /* system registers */
-    _reg_gp gbr;
-    _reg_gp mach;
-    _reg_gp macl;
-    _reg_gp pr;
-    _reg_gp sr;
-    _reg_gp r15;
-    /* dummy registers and vbr */
-    // _reg_gp pc;
-    //_reg_vt vbr600;
-    //_reg_vt vbr400;
-    //_reg_vt vbr100;
-    //_reg_vt vbr;
-	  //_reg_gp intevt;
+  /* general purpose registers (bank0) */
+  uint r0;
+  uint r1;
+  uint r2;
+  uint r3;
+  uint r4;
+  uint r5;
+  uint r6;
+  uint r7;
+  /* not-banked registers */
+  uint r8;
+  uint r9;
+  uint r10;
+  uint r11;
+  uint r12;
+  uint r13;
+  uint r14;
+  /* control registers */
+  uint ssr;
+  uint spc;
+  //uint sgr;
+  //_reg_vt dbr;
+  /* general purpose registers (bank1) */
+  uint r0_bank;
+  uint r1_bank;
+  uint r2_bank;
+  uint r3_bank;
+  uint r4_bank;
+  uint r5_bank;
+  uint r6_bank;
+  uint r7_bank;
+  /* system registers */
+  uint gbr;
+  uint mach;
+  uint macl;
+  uint pr;
+  uint sr;
+  uint r15;
 };
 
 struct trapframe {
   /* general purpose registers */
-  _reg_gp r0;
-  _reg_gp r1;
-  _reg_gp r2;
-  _reg_gp r3;
-  _reg_gp r4;
-  _reg_gp r5;
-  _reg_gp r6;
-  _reg_gp r7;
+  uint r0;
+  uint r1;
+  uint r2;
+  uint r3;
+  uint r4;
+  uint r5;
+  uint r6;
+  uint r7;
   /* not-banked registers */
-  _reg_gp r8;
-  _reg_gp r9;
-  _reg_gp r10;
-  _reg_gp r11;
-  _reg_gp r12;
-  _reg_gp r13;
-  _reg_gp r14;
+  uint r8;
+  uint r9;
+  uint r10;
+  uint r11;
+  uint r12;
+  uint r13;
+  uint r14;
   /* control registers */
-  _reg_gp spc;
-  _reg_gp ssr;
-  _reg_gp sgr;
-  _reg_gp gbr;
+  uint spc;
+  uint ssr;
+  uint sgr;
+  uint gbr;
   /* system registers */
-  _reg_gp mach;
-  _reg_gp macl;
-  _reg_gp pr;
+  uint mach;
+  uint macl;
+  uint pr;
 };
 
 enum procstate { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };

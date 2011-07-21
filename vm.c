@@ -26,20 +26,20 @@ ksegment(void)
 // Return the address of the PTE in page table pgdir
 // that corresponds to linear address va.  If create!=0,
 // create any required page table pages.
-static pte_t *
+static pde_t *
 walkpgdir(pde_t *pgdir, const void *va, int create)
 {
   uint r;
   pde_t *pde;
-  pte_t *pgtab;
+  pde_t *pgtab;
 
   pde = &pgdir[PDX(va)];
   if(*pde & PTEL_V){
-    pgtab = (pte_t*) PTE_ADDR(*pde);
+    pgtab = (pde_t*) PTE_ADDR(*pde);
   } else if(!create || !(r = (uint) kalloc()))
     return 0;
   else {
-    pgtab = (pte_t*) r;
+    pgtab = (pde_t*) r;
     // Make sure all those PTE_P bits are zero.
     memset(pgtab, 0, PGSIZE);
     // The permissions here are overly generous, but they can
@@ -60,7 +60,7 @@ mappages(pde_t *pgdir, void *la, uint size, uint pa, int perm)
   char *last = PGROUNDDOWN(la + size - 1);
 
   while(1){
-    pte_t *pte = walkpgdir(pgdir, a, 1);
+    pde_t *pte = walkpgdir(pgdir, a, 1);
     if(pte == 0)
       return 0;
     if(*pte & PTEL_V)
@@ -168,7 +168,7 @@ switchuvm(struct proc *p)
 
 #if 0
   // XXX: load tlb for process stack
-  pte_t *pte = PTE_ADDR(p->pgdir[0]); // initcode
+  pde_t *pte = PTE_ADDR(p->pgdir[0]); // initcode
   uint addr = PTE_ADDR(pte[0]);
   uint perm = PTE_PERM(pte[0]);
 
@@ -179,12 +179,12 @@ switchuvm(struct proc *p)
   ldtlb();
 #endif
   // an ad-hoc loader
-  uint va;
+  char *va;
   pde_t *pte;
   int i;
   for (
       va = 0, i = 0; 
-      ((pte = walkpgdir(proc->pgdir, va, 0)) != 0) && *pte != 0
+      ((pte = (pde_t *) walkpgdir(proc->pgdir, va, 0)) != 0) && *pte != 0
       ; va += PGSIZE, i = (i+1)%64
       ) {
     set_urc(i);
@@ -207,7 +207,7 @@ switchuvm(struct proc *p)
 char*
 uva2ka(pde_t *pgdir, char *uva)
 {    
-  pte_t *pte = walkpgdir(pgdir, uva, 0);
+  pde_t *pte = walkpgdir(pgdir, uva, 0);
   if(pte == 0) return 0;
   uint pa = PTE_ADDR(*pte);
   return (char *)pa;
@@ -231,11 +231,11 @@ inituvm(pde_t *pgdir, char *init, uint sz)
 
 // Load a program segment into pgdir.  addr must be page-aligned
 // and the pages from addr to addr+sz must already be mapped.
-//int
+int
 loaduvm(pde_t *pgdir, char *addr, struct inode *ip, uint offset, uint sz)
 {
   uint i, pa, n;
-  pte_t *pte;
+  pde_t *pte;
 
   if((uint)addr % PGSIZE != 0)
     panic("loaduvm: addr must be page aligned\n");
@@ -285,7 +285,7 @@ deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
   char *a = (char *)PGROUNDUP(newsz);
   char *last = PGROUNDDOWN(oldsz - 1);
   for(; a <= last; a += PGSIZE){
-    pte_t *pte = walkpgdir(pgdir, a, 0);
+    pde_t *pte = walkpgdir(pgdir, a, 0);
     if(pte && (*pte & PTEL_V) != 0){
       uint pa = PTE_ADDR(*pte);
       if(pa == 0)
@@ -331,7 +331,7 @@ pde_t*
 copyuvm(pde_t *pgdir, uint sz)
 {
   pde_t *d = setupkvm();
-  pte_t *pte;
+  pde_t *pte;
   uint pa, i;
   char *mem;
 
@@ -355,9 +355,9 @@ bad:
   return 0;
 }
 
-void tlb_register(uint va) 
+void tlb_register(char *va) 
 {
-  pte_t *pte = walkpgdir(proc->pgdir, va, 0);
+  pde_t *pte = walkpgdir(proc->pgdir, va, 0);
   uint pa = PTE_ADDR(*pte);
   uint perm = PTE_PERM(*pte);
   set_pteh(PTE_ADDR(va));
@@ -371,7 +371,7 @@ void tlb_register(uint va)
 
 void do_tlb_miss()
 {
-  uint va = *(uint *)TEA;
+  //char *va = *(char **)TEA;
   //tlb_register(va);
   return;
 }
@@ -428,7 +428,7 @@ void dump_pde(pde_t *pde, int also_dump_mem, int level)
     int j;
     for (j = 0; j < 8; ++j) {
       if (pde[i+j] != 0) {
-        dump_mem(PTE_ADDR(pde[i+j]), PGSIZE, level + 2);
+        dump_mem((char *)PTE_ADDR(pde[i+j]), PGSIZE, level + 2);
       }
     }
   }
@@ -443,13 +443,13 @@ void dump_pgd(pde_t *pgd, int level)
   for (i = 0; i < PGSIZE/4; i += 8) {
     if (pgd[i] != 0) {
       cprintf("%spte=0x%x\n", head, pgd[i]);
-      dump_pde(PTE_ADDR(pgd[i]), 1, level+2);
+      dump_pde((pde_t *)PTE_ADDR(pgd[i]), 1, level+2);
     }
   }
   cprintf("%s--- %s end ---\n", head, __func__);
 }
 
-void dump_mem(unsigned char *addr, int size, int level) 
+void dump_mem(char *addr, int size, int level) 
 {
   char *head = dump_head + sizeof(dump_head) - level - 1;
   cprintf("%s--- %s start ---\n", head, __func__);

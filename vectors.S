@@ -59,7 +59,7 @@ vect_table:
 .long trap ! 0x6c0 DMAE
 .long trap ! 0x6e0 -
 .long trap ! 0x700 SCIF ERI
-.long do_scif1_read ! 0x720 SCIF RXI
+.long do_scif_read ! 0x720 SCIF RXI
 .long trap ! 0x740 SCIF BRI
 .long trap ! 0x760 SCIF TXI
 .long trap ! 0x780 -

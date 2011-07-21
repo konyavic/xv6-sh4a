@@ -52,7 +52,7 @@ printint(int xx, uint base, int sgn)
 
 // Print to the console. only understands %d, %x, %p, %s.
 void
-cprintf(char *fmt, ...)
+cprintf(const char *fmt, ...)
 {
   int i, c, state, locking;
   uint *argp;

@@ -1,4 +1,7 @@
+#include "types.h"
+#include "defs.h"
 #include "scif.h"
+
 int xv6_scif_init=0;
 void scif_init(void)
 {
@@ -21,7 +24,7 @@ void scif_init(void)
 
 }
 
-unsigned char scif_putc(unsigned char c)
+int scif_putc(unsigned char c)
 {
   while(!(SCFSR & FSR_TDFE));
   SCFTDR = c;
@@ -29,8 +32,7 @@ unsigned char scif_putc(unsigned char c)
   return c;
 }
 
-/* interrupt handler */
-scif1_get(void)
+int scif_get(void)
 {
   unsigned char c;
   unsigned int s;
@@ -41,23 +43,16 @@ scif1_get(void)
   c = SCFRDR;
   return c;
 }
-void do_scif1_read(void)
+
+/* interrupt handler */
+void do_scif_read(void)
 {
-  consoleintr(scif1_get);
+  consoleintr(scif_get);
   SCFSR &= ~(FSR_RDF | FSR_DR);
   return;
 }
 
 int putc(int c)
-{
-  scif_putc(c);
-  if(c == '\n') {
-    scif_putc('\r');
-  }
-  return c;
-}
-
-int putchar(int c)
 {
   scif_putc(c);
   if(c == '\n') {

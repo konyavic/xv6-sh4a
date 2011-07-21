@@ -108,8 +108,8 @@ found:
   memset(p->context, 0, sizeof *p->context);
   p->context->sr = 0x70000000;
   p->context->pr = (uint)forkret;
-  p->context->r15 = p->tf;
-  p->context->r14 = p->kstack + KSTACKSIZE;
+  p->context->r15 = (uint) p->tf;
+  p->context->r14 = (uint) p->kstack + KSTACKSIZE;
   return p;
 }
 
@@ -404,11 +404,11 @@ forkret(void)
   asm volatile(
       "add #8, r15\n"     // fix for the clobberred stack
       "ldc %0, r0_bank\n"
-      "mov.l %1, r1\n"
+      "mov %1, r1\n"
       "jsr @r1\n"
       "nop\n"
       :
-      : "r"(0), "m"(trapret)
+      : "r"(0), "r"(trapret)
       );
 }
 

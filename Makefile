@@ -1,5 +1,3 @@
-
-# kernel should be placed at first or the order of sections will be wrong
 OBJS = \
 	entry.o\
 	bio.o\
@@ -36,7 +34,7 @@ LD = $(TOOLPREFIX)ld
 OBJCOPY = $(TOOLPREFIX)objcopy
 OBJDUMP = $(TOOLPREFIX)objdump
 CFLAGS = -fno-builtin -Wall -MD -ggdb -nostdinc -I. -I$(shell $(CC) -print-file-name=include)
-# important!
+# NOTE: it is important to append -m4-nofpu for SH-4A
 #CFLAGS += -m4-nofpu -DDEBUG
 #ASFLAGS = -DDEBUG
 CFLAGS += -m4-nofpu

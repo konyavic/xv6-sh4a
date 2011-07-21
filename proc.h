@@ -131,6 +131,3 @@ struct proc{
 //   original data and bss
 //   fixed-size stack
 //   expandable heap
-
-void dump_proc(struct proc *);
-void dump_context(struct context *);

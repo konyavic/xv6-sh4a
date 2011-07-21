@@ -166,19 +166,8 @@ switchuvm(struct proc *p)
   //disable_mmu();
   clear_tlb();
 
-#if 0
-  // XXX: load tlb for process stack
-  pde_t *pte = PTE_ADDR(p->pgdir[0]); // initcode
-  uint addr = PTE_ADDR(pte[0]);
-  uint perm = PTE_PERM(pte[0]);
-
-  set_pteh(0x00000000);
-  set_ptel(addr|perm);
-  //set_urc();
-  cprintf("%s: PTEH=0x%x PTEL=0x%x\n", __func__, *(uint *)PTEH, *(uint *)PTEL);
-  ldtlb();
-#endif
-  // an ad-hoc loader
+  // load TLB for current process
+  // XXX: should be done in TLB miss
   char *va;
   pde_t *pte;
   int i;
@@ -371,9 +360,19 @@ void tlb_register(char *va)
 
 void do_tlb_miss()
 {
+  // XXX: current irq lock in acquire() forbid TLB miss 
+  // and causes reset
+
   //char *va = *(char **)TEA;
   //tlb_register(va);
   return;
+}
+
+void do_tlb_violation()
+{
+  cprintf("pid %d %s: access violation -- killed\n", proc->pid, proc->name);
+  proc->killed = 1;
+  exit();
 }
 
 char dump_head[] = "        ";

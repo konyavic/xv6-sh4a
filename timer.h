@@ -6,6 +6,7 @@
 #define TMU_MSEC_TO_HZ(t) (t * (12500000ul / 1000))
 
 #define TIMER_RATE	(12500000UL)  /* use PCK/4 edge.  12.5Mhz 1tick = 0.08us */
+//#define TIMER_RATE	(1250000UL)  /* use PCK/4 edge.  12.5Mhz 1tick = 0.08us */
 #define TIMER_RATE_MHZ  (TIMER_RATE/1000000UL)
 #define COUNT_FROM_DEFAULT 150
 

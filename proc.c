@@ -361,7 +361,13 @@ sched(void)
   if(!(read_sr() & SR_BL_MASK))
     panic("sched interruptible");
   intena = cpu->intena;
+#ifdef DEBUG
+  cprintf("%s: before swtch\n", __func__);
+#endif
   swtch(&proc->context, cpu->scheduler);
+#ifdef DEBUG
+  cprintf("%s: after swtch\n", __func__);
+#endif
   cpu->intena = intena;
   return;
 }

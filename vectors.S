@@ -7,10 +7,10 @@ vect_table:
 .long do_tlb_miss ! 0x040 TLB miss (read)
 .long do_tlb_miss ! 0x060 TLB miss (write)
 .long trap ! 0x080 first page write
-.long trap ! 0x0a0 TLB permission (read)
-.long trap ! 0x0c0 TLB permission (write)
-.long trap ! 0x0e0 address error(read)
-.long trap ! 0x100 address error(write)
+.long do_tlb_violation ! 0x0a0 TLB permission (read)
+.long do_tlb_violation ! 0x0c0 TLB permission (write)
+.long do_tlb_violation ! 0x0e0 address error(read)
+.long do_tlb_violation ! 0x100 address error(write)
 .long trap ! 0x120 FPU exception
 .long trap ! 0x140 TLB double hits
 .long do_syscall ! 0x160 TRAPA

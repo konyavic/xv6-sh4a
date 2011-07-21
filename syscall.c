@@ -52,26 +52,25 @@ argint(int n, int *ip)
     case 0:
       asm volatile ("stc r4_bank, %0" : "=r"(x));
       *ip = x;
-      break;
+      return 0;
     case 1:
       asm volatile ("stc r5_bank, %0" : "=r"(x));
       *ip = x;
-      break;
+      return 0;
     case 2:
       asm volatile ("stc r6_bank, %0" : "=r"(x));
       *ip = x;
-      break;
+      return 0;
     case 3:
       asm volatile ("stc r7_bank, %0" : "=r"(x));
       *ip = x;
-      break;
+      return 0;
     default:
       // Fetch from stack
       // XXX: NOT TESTSED
       x = fetchint(proc, proc->tf->sgr + 4*n, ip);
-      break;
+      return x;
   }
-  return x;
 }
 
 // Fetch the nth word-sized system call argument as a pointer

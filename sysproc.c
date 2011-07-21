@@ -59,7 +59,6 @@ sys_sbrk(void)
 int
 sys_sleep(void)
 {
-  cprintf("%s: not working yet\n", __func__);
   int n;
   uint ticks0;
   
@@ -83,7 +82,6 @@ sys_sleep(void)
 int
 sys_uptime(void)
 {
-  cprintf("%s: not working yet\n", __func__);
   uint xticks;
   
   acquire(&tickslock);

@@ -258,8 +258,8 @@ loaduvm(pde_t *pgdir, char *addr, struct inode *ip, uint offset, uint sz)
 int
 allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
 {
-  //if(newsz > USERTOP)
-    //return 0;
+  if(newsz > USERTOP)
+    return 0;
   char *a = (char *)PGROUNDUP(oldsz);
   char *last = PGROUNDDOWN(newsz - 1);
   for (; a <= last; a += PGSIZE){
@@ -343,10 +343,10 @@ copyuvm(pde_t *pgdir, uint sz)
       panic("copyuvm: page not present\n");
     pa = PTE_ADDR(*pte);
     if(!(mem = kalloc()))
-          goto bad;
+      goto bad;
     memmove(mem, (char *)pa, PGSIZE);
     if(!mappages(d, (void *)i, PGSIZE, PADDR(mem), PTEL_DEFAULT))
-     goto bad;
+      goto bad;
   }
   return d;
 

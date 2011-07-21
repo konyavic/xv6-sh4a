@@ -24,5 +24,4 @@
 
 #define STACK_SIZE  0x1000
 
-//#define PHYSTOP  0x8d000000 // use phys mem up to here as free pool
-#define PHYSTOP  0x8c900000 // use phys mem up to here as free pool
+#define PHYSTOP  0x8d000000 // use phys mem up to here as free pool

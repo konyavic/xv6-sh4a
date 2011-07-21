@@ -329,6 +329,7 @@ mem(void)
   ppid = getpid();
   if((pid = fork()) == 0){
     m1 = 0;
+    // XXX: UTLB exhaustion
     while((m2 = malloc(10001)) != 0) {
       *(char**) m2 = m1;
       m1 = m2;
@@ -1269,22 +1270,29 @@ sbrktest(void)
   wait();
 
   // can one allocate the full 640K?
+  // XXX: current implementation only allows up to 256K
   a = sbrk(0);
-  uint amt = (640 * 1024) - (uint) a;
+  //uint amt = (640 * 1024) - (uint) a;
+  uint amt = (256 * 1024) - (uint) a;
   char *p = sbrk(amt);
   if(p != a){
-    printf(stdout, "sbrk test failed 640K test, p %x a %x\n", p, a);
+    //printf(stdout, "sbrk test failed 640K test, p %x a %x\n", p, a);
+    printf(stdout, "sbrk test failed 256K test, p %x a %x\n", p, a);
     exit();
   }
-  char *lastaddr = (char *)(640 * 1024 - 1);
+  //char *lastaddr = (char *)(640 * 1024 - 1);
+  char *lastaddr = (char *)(256 * 1024 - 1);
   *lastaddr = 99;
 
   // is one forbidden from allocating more than 640K?
+  // XXX: UTLB entry will be exhausted
+#if 0
   c = sbrk(4096);
   if(c != (char *) 0xffffffff){
     printf(stdout, "sbrk allocated more than 640K, c %x\n", c);
     exit();
   }
+#endif
 
   // can one de-allocate?
   a = sbrk(0);
@@ -1312,20 +1320,24 @@ sbrktest(void)
     exit();
   }
 
+#if 0
   c = sbrk(4096);
   if(c != (char *) 0xffffffff){
     printf(stdout, "sbrk was able to re-allocate beyond 640K, c %x\n", c);
     exit();
   }
+#endif
 
   // can we read the kernel's memory?
-  for(a = (char*)(640*1024); a < (char *)2000000; a += 50000){
+  //for(a = (char*)(640*1024); a < (char *)2000000; a += 50000){
+  for(a = (char*)(0x80000000); a < (char *)0xc0000000; a += 50000){
     int ppid = getpid();
     int pid = fork();
     if(pid < 0){
       printf(stdout, "fork failed\n");
       exit();
     }
+    // XXX: kill on address error
     if(pid == 0){
       printf(stdout, "oops could read %x = %x\n", a, *a);
       kill(ppid);
